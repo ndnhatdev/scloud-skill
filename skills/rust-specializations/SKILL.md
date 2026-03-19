@@ -7,6 +7,7 @@ description: Advanced Rust specialization guidance for compiler and tooling inte
 
 Use this skill for deep Rust verticals that sit beyond general language use, backend frameworks, or platform-target setup.
 Keep the core instructions short and load only the reference file that matches the request.
+For `proptest`, `loom`, Kani, or verification-strategy work, prefer the separate `rust-verification` skill if it is available.
 
 ## Request Map
 

@@ -39,7 +39,7 @@ const RESEARCH_BASELINE = [
   "Official specialization docs reviewed on 2026-03-19.",
   "The std::simd page reviewed showed portable_simd as nightly-only experimental.",
   "Rust for Linux docs reviewed showed current policy, contact, and reference-driver resources.",
-  "Coverage-frontier guidance was updated against official project docs for verification, distribution, GUI, and graphics ecosystems.",
+  "Coverage-frontier guidance was updated against official project docs for delivery, GUI, graphics, and the separately packaged rust-verification skill.",
   "Guidance is intentionally biased toward rustc-dev-guide, Rust Fuzz Book, Rust for Linux, standard-library docs, and official project docs for adjacent domains."
 ] as const;
 
@@ -82,7 +82,7 @@ const TOPICS: Record<Topic, TopicCard> = {
   overview: {
     title: "Rust Specializations Map",
     summary:
-      "Beyond ordinary Rust usage, this repository now covers four major advanced verticals directly: compiler internals, fuzzing and sanitizers, kernel-driver work, and low-level SIMD or intrinsics. The next frontier domains are verification, distribution, GUI, and graphics or GPU work.",
+      "Beyond ordinary Rust usage, this repository now covers compiler internals, fuzzing and sanitizers, kernel-driver work, low-level SIMD or intrinsics, and verification in a separate skill. The next frontier domains are delivery, GUI, and graphics or GPU work.",
     rules: [
       "Pick the specialization boundary first; these domains have different invariants, tools, and stability stories.",
       "Prefer primary docs because details in these areas change faster than ordinary Rust syntax.",
@@ -115,7 +115,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://rust-fuzz.github.io/book/",
       "https://rust-for-linux.com/",
       "https://doc.rust-lang.org/std/arch/index.html",
-      "https://docs.rs/loom/latest/loom/",
+      "https://model-checking.github.io/kani/",
       "https://opensource.axo.dev/cargo-dist/"
     ],
     related: ["compiler-tooling", "fuzzing-reliability", "kernel-drivers", "simd-intrinsics", "coverage-frontiers"]
@@ -279,11 +279,10 @@ const TOPICS: Record<Topic, TopicCard> = {
   "coverage-frontiers": {
     title: "Coverage and Frontier Domains",
     summary:
-      "The current Rust skill set now covers language, backend ecosystem, platforms, compiler internals, fuzzing, kernel work, and SIMD. The remaining high-value frontier domains are verification, release and distribution, GUI, and graphics or GPU work.",
+      "The current Rust skill set now covers language, backend ecosystem, platforms, compiler internals, fuzzing, kernel work, SIMD, and verification. The remaining high-value frontier domains are release and distribution, GUI, and graphics or GPU work.",
     rules: [
       "Create a new Rust skill only when the domain brings its own toolchain, testing loop, CI matrix, and operational failure modes.",
       "Keep crate-level advice inside existing skills when the real problem is still core Rust design.",
-      "Verification deserves a separate lane when property tests, model checking, or concurrency-interleaving checks drive design decisions.",
       "Distribution deserves a separate lane when cross-compilation, packaging, signing, and release artifacts become first-class concerns.",
       "GUI and graphics should split only if the product genuinely depends on desktop UX or rendering architecture."
     ],
@@ -298,18 +297,15 @@ const TOPICS: Record<Topic, TopicCard> = {
     ],
     pitfalls: [
       "Creating a separate skill for a crate that does not change the engineering discipline.",
-      "Mixing distribution or verification concerns into a language-only skill until the workflow becomes incoherent.",
+      "Mixing distribution concerns into a language-only skill until the workflow becomes incoherent.",
       "Assuming GUI, graphics, or data domains matter before the product direction proves it."
     ],
     practice: [
-      "Take one Rust project and decide whether its next skill split should be verification, distribution, GUI, or graphics.",
+      "Take one Rust project and decide whether its next skill split should be distribution, GUI, or graphics.",
       "Audit a build and release workflow and decide whether it needs a dedicated delivery skill.",
-      "List the tools that make verification different from normal tests in one codebase."
+      "List which remaining domains would force a different CI or deployment workflow in one codebase."
     ],
     sources: [
-      "https://docs.rs/proptest/latest/proptest/",
-      "https://docs.rs/loom/latest/loom/",
-      "https://model-checking.github.io/kani/",
       "https://tauri.app/start/",
       "https://docs.rs/egui/latest/egui/",
       "https://bevyengine.org/learn/quick-start/introduction/",
@@ -447,7 +443,7 @@ function buildOverviewSection(depth: Depth): string {
       "Fuzzing/reliability: cargo-fuzz, coverage, structure-aware inputs, sanitizers.",
       "Kernel/drivers: Rust for Linux policies, abstractions, and context rules.",
       "SIMD/intrinsics: std::arch, target-feature gating, runtime dispatch, portable_simd status.",
-      "Coverage/frontiers: what is already covered and whether verification, delivery, GUI, or graphics deserves the next split."
+      "Coverage/frontiers: what is already covered and whether delivery, GUI, or graphics deserves the next split."
     ],
     depth
   );

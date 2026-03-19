@@ -10,6 +10,7 @@ Keep the core instructions short and load only the reference file that matches t
 For Tokio, Serde, Axum, SQLx, or Tracing crate-level guidance, prefer the separate `rust-ecosystem` skill if it is available.
 For wasm, embedded `no_std`, Embassy, or firmware-platform guidance, prefer the separate `rust-platforms` skill if it is available.
 For compiler internals, fuzzing, Rust for Linux, or SIMD or intrinsics work, prefer the separate `rust-specializations` skill if it is available.
+For `proptest`, `loom`, Kani, or multi-layer verification planning, prefer the separate `rust-verification` skill if it is available.
 
 ## Request Map
 

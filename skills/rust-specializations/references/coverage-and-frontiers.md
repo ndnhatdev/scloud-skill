@@ -12,13 +12,10 @@ Use the domain-specific reference files for concrete technical questions once th
 - `rust-ecosystem`: Tokio, Serde, Axum, SQLx, Tracing, and service-stack integration
 - `rust-platforms`: wasm, embedded `no_std`, Embassy, firmware architecture, and platform tooling
 - `rust-specializations`: rustc internals, fuzzing and sanitizers, Rust for Linux, and SIMD or intrinsics
+- `rust-verification`: `proptest`, `loom`, Kani, and layered verification strategy
 
 ## Remaining High-Value Frontiers
 
-- Verification and concurrency testing:
-  - `proptest` for property-based testing
-  - `loom` for deterministic exploration of concurrent interleavings
-  - `kani` when formal verification or proof-oriented bug-finding is the real goal
 - Distribution and cross-compilation:
   - `cross`, `cargo-zigbuild`, `cargo-dist`, musl or static-linking choices, CI matrix design, and release artifacts
 - Desktop and GUI applications:
@@ -41,22 +38,18 @@ Use the domain-specific reference files for concrete technical questions once th
 ## Senior Heuristics
 
 - Do not create a new skill just because a crate is popular; create it when the crate pulls in a different engineering discipline.
-- Verification deserves its own lane because `proptest`, `loom`, and `kani` change how you design tests and reason about bugs.
 - Distribution deserves its own lane because cross-compiling and shipping binaries is an operational system, not only a Cargo command.
 - GUI and graphics deserve separate skills only if the project genuinely lives there; otherwise they stay as future candidates.
 - Keep `rust-master` focused on language and design rules; let domain skills own their toolchains and operational workflows.
 
 ## Suggested Next Splits
 
-1. `rust-verification` for `proptest`, `loom`, `kani`, and stronger reliability workflows.
-2. `rust-delivery` for cross-compilation, packaging, release automation, and target-distribution tradeoffs.
-3. `rust-gui` or `rust-graphics` only if the product direction actually depends on desktop UI or rendering and GPU work.
+1. `rust-delivery` for cross-compilation, packaging, release automation, and target-distribution tradeoffs.
+2. `rust-gui` or `rust-graphics` only if the product direction actually depends on desktop UI or rendering and GPU work.
+3. data-system skills only if the repo actually moves toward Arrow, DataFusion, or Polars style workloads.
 
 ## Sources
 
-- https://docs.rs/proptest/latest/proptest/
-- https://docs.rs/loom/latest/loom/
-- https://model-checking.github.io/kani/
 - https://tauri.app/start/
 - https://docs.rs/egui/latest/egui/
 - https://bevyengine.org/learn/quick-start/introduction/
