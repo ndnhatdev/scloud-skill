@@ -1,0 +1,16 @@
+node_modules/
+dist/
+releases/
+
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Keep shared AgentSkill sources, ignore other local agent state by default.
+.agents/*
+!.agents/skills/
+!.agents/skills/**
+
+.agents/**/__pycache__/
+.agents/**/*.pyc
