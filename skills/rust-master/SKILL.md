@@ -73,7 +73,7 @@ of truth.
 
 ```yaml runtime-manifest
 version: 0.1.0
-entry: index.ts
+entry: scripts/index.ts
 env_requirements: []
 input_schema:
   type: object

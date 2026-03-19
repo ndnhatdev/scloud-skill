@@ -61,7 +61,7 @@ export function parseSkillFile(rawContent: string): RuntimeSkillManifest {
     name: frontmatter.name,
     version: runtimeParsed.version,
     description: frontmatter.description as string | undefined,
-    entry: (runtimeParsed.entry as string | undefined) ?? "index.ts",
+    entry: (runtimeParsed.entry as string | undefined) ?? "scripts/index.ts",
     env_requirements: runtimeParsed.env_requirements,
     input_schema: runtimeParsed.input_schema,
     body: parsed.content,

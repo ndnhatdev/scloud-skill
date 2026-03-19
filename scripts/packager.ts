@@ -88,25 +88,25 @@ async function ensureFileExists(filePath: string): Promise<void> {
 
 async function packageSkill(skillName: string): Promise<void> {
   const skillDir = path.join(SKILLS_DIR, skillName);
-  const skillEntry = path.join(skillDir, "index.ts");
   const skillManifestPath = path.join(skillDir, "SKILL.md");
 
-  await ensureFileExists(skillEntry);
   await ensureFileExists(skillManifestPath);
 
-  const [sourceCode, rawManifest] = await Promise.all([
-    fs.readFile(skillEntry, "utf8"),
-    fs.readFile(skillManifestPath, "utf8")
-  ]);
-
+  const rawManifest = await fs.readFile(skillManifestPath, "utf8");
   const manifest = parseSkillFile(rawManifest);
+  const entryPath = manifest.entry ?? "scripts/index.ts";
+  const normalizedEntry = path.normalize(entryPath);
+
+  if (path.isAbsolute(normalizedEntry) || normalizedEntry.startsWith("..")) {
+    throw new Error(`Skill "${skillName}" có entry không hợp lệ: "${entryPath}". Entry phải là đường dẫn tương đối trong thư mục skill.`);
+  }
+
+  const skillEntry = path.join(skillDir, normalizedEntry);
+  await ensureFileExists(skillEntry);
+  const sourceCode = await fs.readFile(skillEntry, "utf8");
 
   if (manifest.name !== skillName) {
     throw new Error(`Frontmatter name="${manifest.name}" không khớp thư mục skill="${skillName}".`);
-  }
-
-  if ((manifest.entry ?? "index.ts") !== "index.ts") {
-    throw new Error(`Skill "${skillName}" phải dùng entry cố định là "index.ts" theo kiến trúc single-file tool.`);
   }
 
   validateIsolation(skillName, sourceCode);

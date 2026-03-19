@@ -97,10 +97,15 @@ async function validateSkillMarkdown(skillDir: string, skillName: string): Promi
 
   const skillContent = await fs.readFile(skillPath, "utf8");
   const manifest = parseSkillFile(skillContent);
+  const entryPath = manifest.entry ?? "scripts/index.ts";
 
   if (manifest.name !== skillName) {
     fail(`SKILL.md frontmatter name="${manifest.name}" does not match folder "${skillName}".`);
   }
+  if (!entryPath.startsWith("scripts/")) {
+    fail(`Runtime entry phải nằm trong scripts/. Hiện tại là "${entryPath}".`);
+  }
+  await ensureExists(path.join(skillDir, entryPath), `runtime entry ${entryPath}`);
 
   logOk(`SKILL.md lines: ${countLines(skillContent)}`);
   logOk(`runtime manifest version: ${manifest.version}`);
@@ -123,7 +128,6 @@ async function main(): Promise<void> {
 
   const skillDir = path.join(SKILLS_DIR, skillName);
   await ensureExists(skillDir, "skill directory");
-  await ensureExists(path.join(skillDir, "index.ts"), "runtime entry");
   await ensureExists(path.join(SKILL_CREATOR_DIR, "scripts", "quick_validate.py"), "quick_validate.py");
   await ensureExists(path.join(SKILL_CREATOR_DIR, "scripts", "package_skill.py"), "package_skill.py");
 
