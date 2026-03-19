@@ -1,67 +1,13 @@
 import { build } from "esbuild";
-import matter from "gray-matter";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import * as tar from "tar";
-
-type SkillManifest = {
-  name: string;
-  version: string;
-  description?: string;
-  entry?: string;
-  env_requirements: string[];
-  input_schema: Record<string, unknown>;
-};
+import { parseSkillFile, type RuntimeSkillManifest } from "./skill-manifest";
 
 const ROOT_DIR = process.cwd();
 const SKILLS_DIR = path.join(ROOT_DIR, "skills");
 const RELEASES_DIR = path.join(ROOT_DIR, "releases");
-
-function assertString(value: unknown, fieldName: string): asserts value is string {
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`Frontmatter field "${fieldName}" phải là string không rỗng.`);
-  }
-}
-
-function assertStringArray(value: unknown, fieldName: string): asserts value is string[] {
-  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || item.trim() === "")) {
-    throw new Error(`Frontmatter field "${fieldName}" phải là mảng string không rỗng.`);
-  }
-}
-
-function assertObject(value: unknown, fieldName: string): asserts value is Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`Frontmatter field "${fieldName}" phải là object hợp lệ.`);
-  }
-}
-
-function parseManifest(rawContent: string): SkillManifest {
-  const parsed = matter(rawContent);
-  const data = parsed.data as Record<string, unknown>;
-
-  assertString(data.name, "name");
-  assertString(data.version, "version");
-  assertStringArray(data.env_requirements, "env_requirements");
-  assertObject(data.input_schema, "input_schema");
-
-  if (data.description !== undefined) {
-    assertString(data.description, "description");
-  }
-
-  if (data.entry !== undefined) {
-    assertString(data.entry, "entry");
-  }
-
-  return {
-    name: data.name,
-    version: data.version,
-    description: data.description as string | undefined,
-    entry: (data.entry as string | undefined) ?? "index.ts",
-    env_requirements: data.env_requirements,
-    input_schema: data.input_schema
-  };
-}
 
 function extractImportSpecifiers(sourceCode: string): string[] {
   const specifiers = new Set<string>();
@@ -116,7 +62,7 @@ function validateStatelessBehavior(skillName: string, sourceCode: string): void 
   }
 }
 
-function validateEnvRequirements(skillName: string, manifest: SkillManifest, sourceCode: string): void {
+function validateEnvRequirements(skillName: string, manifest: RuntimeSkillManifest, sourceCode: string): void {
   const declared = new Set(manifest.env_requirements);
   const usedEnvNames = new Set<string>();
 
@@ -143,7 +89,7 @@ async function ensureFileExists(filePath: string): Promise<void> {
 async function packageSkill(skillName: string): Promise<void> {
   const skillDir = path.join(SKILLS_DIR, skillName);
   const skillEntry = path.join(skillDir, "index.ts");
-  const skillManifestPath = path.join(skillDir, "skill.md");
+  const skillManifestPath = path.join(skillDir, "SKILL.md");
 
   await ensureFileExists(skillEntry);
   await ensureFileExists(skillManifestPath);
@@ -153,7 +99,7 @@ async function packageSkill(skillName: string): Promise<void> {
     fs.readFile(skillManifestPath, "utf8")
   ]);
 
-  const manifest = parseManifest(rawManifest);
+  const manifest = parseSkillFile(rawManifest);
 
   if (manifest.name !== skillName) {
     throw new Error(`Frontmatter name="${manifest.name}" không khớp thư mục skill="${skillName}".`);
@@ -171,7 +117,7 @@ async function packageSkill(skillName: string): Promise<void> {
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), `ai-skill-${skillName}-`));
   const bundledOutputPath = path.join(tempDir, "index.js");
-  const copiedManifestPath = path.join(tempDir, "skill.md");
+  const copiedManifestPath = path.join(tempDir, "SKILL.md");
   const releaseFilePath = path.join(RELEASES_DIR, `${skillName}-latest.tar.gz`);
 
   try {
@@ -192,14 +138,14 @@ async function packageSkill(skillName: string): Promise<void> {
 
     await fs.copyFile(skillManifestPath, copiedManifestPath);
 
-    // Đóng gói đúng 2 artifact: code đã bundle và manifest skill.
+    // Đóng gói đúng 2 artifact: code đã bundle và canonical SKILL.md.
     await tar.create(
       {
         gzip: true,
         cwd: tempDir,
         file: releaseFilePath
       },
-      ["index.js", "skill.md"]
+      ["index.js", "SKILL.md"]
     );
 
     console.log(`Packaged skill "${skillName}" thành công.`);

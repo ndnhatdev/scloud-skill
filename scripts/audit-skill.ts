@@ -1,12 +1,7 @@
 import { execFileSync } from "node:child_process";
 import * as fs from "node:fs/promises";
-import matter from "gray-matter";
 import * as path from "node:path";
-
-type Frontmatter = {
-  name?: string;
-  description?: string;
-};
+import { countLines, getReferenceLinks, parseSkillFile } from "./skill-manifest";
 
 const ROOT_DIR = process.cwd();
 const SKILLS_DIR = path.join(ROOT_DIR, "skills");
@@ -71,11 +66,6 @@ function run(command: string, args: string[], label: string): void {
   }
 }
 
-async function readFrontmatter(filePath: string): Promise<Frontmatter> {
-  const content = await fs.readFile(filePath, "utf8");
-  return matter(content).data as Frontmatter;
-}
-
 async function ensureExists(filePath: string, label: string): Promise<void> {
   try {
     await fs.access(filePath);
@@ -85,39 +75,41 @@ async function ensureExists(filePath: string, label: string): Promise<void> {
   }
 }
 
-function countLines(content: string): number {
-  return content.split(/\r?\n/).length;
+async function ensureMissing(filePath: string, label: string): Promise<void> {
+  try {
+    await fs.access(filePath);
+    fail(`${label} should not exist anymore: ${path.relative(ROOT_DIR, filePath)}`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      logOk(`${label}: not present`);
+      return;
+    }
+    throw error;
+  }
 }
 
 async function validateSkillMarkdown(skillDir: string, skillName: string): Promise<void> {
-  const canonicalSkillPath = path.join(skillDir, "SKILL.md");
-  const runtimeSkillPath = path.join(skillDir, "skill.md");
+  const skillPath = path.join(skillDir, "SKILL.md");
+  const legacySkillPath = path.join(skillDir, "skill.md");
 
-  await ensureExists(canonicalSkillPath, "canonical SKILL.md");
-  await ensureExists(runtimeSkillPath, "runtime skill.md");
+  await ensureExists(skillPath, "SKILL.md");
+  await ensureMissing(legacySkillPath, "legacy skill.md");
 
-  const [canonicalContent, runtimeContent, canonicalFrontmatter, runtimeFrontmatter] = await Promise.all([
-    fs.readFile(canonicalSkillPath, "utf8"),
-    fs.readFile(runtimeSkillPath, "utf8"),
-    readFrontmatter(canonicalSkillPath),
-    readFrontmatter(runtimeSkillPath)
-  ]);
+  const skillContent = await fs.readFile(skillPath, "utf8");
+  const manifest = parseSkillFile(skillContent);
 
-  if (canonicalFrontmatter.name !== skillName) {
-    fail(`SKILL.md frontmatter name="${canonicalFrontmatter.name}" does not match folder "${skillName}".`);
-  }
-  if (runtimeFrontmatter.name !== skillName) {
-    fail(`skill.md frontmatter name="${runtimeFrontmatter.name}" does not match folder "${skillName}".`);
+  if (manifest.name !== skillName) {
+    fail(`SKILL.md frontmatter name="${manifest.name}" does not match folder "${skillName}".`);
   }
 
-  logOk(`SKILL.md lines: ${countLines(canonicalContent)}`);
-  logOk(`skill.md lines: ${countLines(runtimeContent)}`);
+  logOk(`SKILL.md lines: ${countLines(skillContent)}`);
+  logOk(`runtime manifest version: ${manifest.version}`);
 
-  if (countLines(canonicalContent) > 500) {
+  if (countLines(skillContent) > 500) {
     logWarn("SKILL.md is getting large; split more content into references/.");
   }
 
-  const referenceLinks = [...canonicalContent.matchAll(/\]\((references\/[^)]+)\)/g)].map((match) => match[1]);
+  const referenceLinks = getReferenceLinks(manifest.body);
   for (const relativeLink of new Set(referenceLinks)) {
     await ensureExists(path.join(skillDir, relativeLink), `referenced file ${relativeLink}`);
   }

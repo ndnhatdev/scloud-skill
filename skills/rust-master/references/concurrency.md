@@ -3,6 +3,8 @@
 ## Scope
 
 Load this file for async vs threads, Send/Sync, shared-state design, and lock selection.
+See also [foundations.md](foundations.md) for `Rc<T>`, `Arc<T>`, `RefCell<T>`, and ownership-first modeling.
+See also [design-and-tooling.md](design-and-tooling.md) for unsafe concurrency edges and API design tradeoffs.
 
 ## Async vs Threads
 

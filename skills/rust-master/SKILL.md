@@ -8,6 +8,15 @@ description: Deep Rust language guidance for ownership, borrowing, lifetimes, sm
 Use this skill for Rust language reasoning, code review, design choices, and study plans.
 Keep the core instructions short and load only the reference file that matches the request.
 
+## Request Map
+
+- Ownership, borrowing, lifetimes, and choosing `Box<T>`, `Rc<T>`, `Arc<T>`, `Cell<T>`, `RefCell<T>`:
+  load [references/foundations.md](references/foundations.md)
+- Async vs threads, `Send`, `Sync`, channels, `Mutex<T>`, `RwLock<T>`, or shared-state design:
+  load [references/concurrency.md](references/concurrency.md)
+- Traits, `impl Trait`, `dyn Trait`, `Result`, `panic!`, Cargo, testing, unsafe, or API quality:
+  load [references/design-and-tooling.md](references/design-and-tooling.md)
+
 ## Workflow
 
 1. Classify the request as `learn`, `choose`, `review`, `debug`, `design`, or `study-plan`.
@@ -56,3 +65,53 @@ When auditing Rust code, check these first:
 - Prefer Rust Book, Rust Reference, Cargo Book, Edition Guide, standard library docs, and Rust API Guidelines.
 - Use exact versions or dates when the topic is edition-specific or may have changed.
 - Separate stable language rules from crate ecosystem advice.
+
+## Runtime Manifest
+
+The monorepo runtime packager reads this block from `SKILL.md` so the skill has a single source
+of truth.
+
+```yaml runtime-manifest
+version: 0.1.0
+entry: index.ts
+env_requirements: []
+input_schema:
+  type: object
+  properties:
+    topic:
+      type: string
+      enum:
+        - overview
+        - ownership
+        - lifetimes
+        - smart-pointers
+        - traits
+        - error-handling
+        - async-vs-threads
+        - concurrency
+        - cargo
+        - testing
+        - unsafe
+        - api-design
+        - all
+    goal:
+      type: string
+      enum:
+        - learn
+        - choose
+        - review
+        - debug
+        - design
+        - study-plan
+    question:
+      type: string
+    constraints:
+      type: string
+    depth:
+      type: string
+      enum:
+        - quick
+        - standard
+        - deep
+  additionalProperties: false
+```

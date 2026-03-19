@@ -3,6 +3,8 @@
 ## Scope
 
 Load this file for trait design, `impl Trait` vs `dyn Trait`, error handling, Cargo, testing, unsafe, and API design.
+See also [foundations.md](foundations.md) for lifetime and ownership decisions that shape API boundaries.
+See also [concurrency.md](concurrency.md) for async, locks, and `Send` or `Sync` constraints.
 
 ## Traits, Generics, and Trait Objects
 
