@@ -5,6 +5,7 @@
 Load this file for async vs threads, Send/Sync, shared-state design, and lock selection.
 See also [foundations.md](foundations.md) for `Rc<T>`, `Arc<T>`, `RefCell<T>`, and ownership-first modeling.
 See also [design-and-tooling.md](design-and-tooling.md) for unsafe concurrency edges and API design tradeoffs.
+See also [diagnostics-and-type-errors.md](diagnostics-and-type-errors.md) for non-`Send` futures, `'static` task capture issues, and receiver-type compiler diagnostics.
 
 ## Async vs Threads
 

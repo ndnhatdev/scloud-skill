@@ -4,6 +4,7 @@
 
 Load this file for battle-tested heuristics from Rust community discussions and tool docs. These are design heuristics and failure patterns, not substitutes for the language rules.
 See also [foundations.md](foundations.md) and [concurrency.md](concurrency.md) for the underlying rules.
+See also [diagnostics-and-type-errors.md](diagnostics-and-type-errors.md) for turning forum-style symptoms back into compiler-error families.
 
 ## Classic Lessons
 

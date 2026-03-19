@@ -5,6 +5,7 @@
 Load this file for trait design, `impl Trait` vs `dyn Trait`, error handling, Cargo, testing, unsafe, and API design.
 See also [foundations.md](foundations.md) for lifetime and ownership decisions that shape API boundaries.
 See also [concurrency.md](concurrency.md) for async, locks, and `Send` or `Sync` constraints.
+See also [diagnostics-and-type-errors.md](diagnostics-and-type-errors.md) for `E0277`, `E0599`, dyn-compatibility, and coherence-error triage.
 
 ## Traits, Generics, and Trait Objects
 

@@ -7,6 +7,7 @@ type Topic =
   | "error-handling"
   | "async-vs-threads"
   | "concurrency"
+  | "diagnostics"
   | "cargo"
   | "testing"
   | "unsafe"
@@ -60,6 +61,7 @@ const TOPIC_ORDER = [
   "error-handling",
   "async-vs-threads",
   "concurrency",
+  "diagnostics",
   "syntax-idioms",
   "performance",
   "tooling-validation",
@@ -87,6 +89,7 @@ const TOPIC_KEYWORDS: Record<Topic, string[]> = {
   "error-handling": ["result", "option", "panic", "error", "unwrap", "expect", "recoverable"],
   "async-vs-threads": ["async", "await", "tokio", "future", "futures", "thread", "threads", "i/o", "io", "cpu-bound", "spawn_blocking"],
   concurrency: ["send", "sync", "channel", "mutex", "rwlock", "arc", "atomic", "race", "shared state"],
+  diagnostics: ["compiler error", "diagnostic", "error code", "rustc explain", "cargo check", "borrow checker", "e0277", "e0308", "e0382", "e0499", "e0502", "e0507", "e0597", "e0599", "type mismatch", "type annotation"],
   "syntax-idioms": ["idiom", "idiomatic", "syntax", "pattern", "patterns", "iterator", "iterators", "entry", "collect", "match", "if let", "let else", "newtype"],
   performance: ["performance", "optimize", "profiling", "profile", "benchmark", "criterion", "allocation", "binary size", "bloat", "build timings", "compile time", "latency", "throughput"],
   "tooling-validation": ["clippy", "rustfmt", "cargo fmt", "cargo fix", "rust-analyzer", "miri", "nextest", "coverage", "llvm-cov", "udeps", "deny", "semver", "msrv", "cargo expand", "cargo hack"],
@@ -134,7 +137,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://rust-lang.github.io/api-guidelines/checklist.html",
       "https://nnethercote.github.io/perf-book/introduction.html"
     ],
-    related: ["ownership", "smart-pointers", "traits", "concurrency", "syntax-idioms", "performance", "tooling-validation"]
+    related: ["ownership", "smart-pointers", "traits", "concurrency", "diagnostics", "syntax-idioms", "performance", "tooling-validation"]
   },
   ownership: {
     title: "Ownership and Borrowing",
@@ -398,6 +401,46 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://doc.rust-lang.org/stable/std/cell/index.html"
     ],
     related: ["async-vs-threads", "smart-pointers", "unsafe"]
+  },
+  diagnostics: {
+    title: "Compiler Diagnostics and Type Errors",
+    summary:
+      "Senior Rust debugging starts by classifying compiler errors into families: ownership, lifetime, type mismatch, trait-bound, dyn compatibility, coherence, or `Send`/`Sync` constraints.",
+    rules: [
+      "Use `cargo check` for the fastest compile-error feedback loop, but remember some diagnostics only appear during code generation.",
+      "Read the first hard error before touching cascaded follow-up errors.",
+      "Capture the error code and use `rustc --explain CODE` when the message family is not obvious.",
+      "Fix the boundary that is wrong: signature, ownership model, trait bound, or concurrency capture, not just the final symptom line.",
+      "Treat compiler suggestions as candidate local repairs, not proof that `clone()`, boxing, or annotation is the right architectural fix."
+    ],
+    useWhen: [
+      "You are debugging borrow-checker, type-system, trait-bound, or async `Send` errors.",
+      "You need a repeatable workflow for reading Rust compiler diagnostics.",
+      "You are reviewing a patch that silences compile errors in suspicious ways."
+    ],
+    avoidWhen: [
+      "You are dealing with a runtime bug after the code already compiles cleanly.",
+      "You want crate-specific semantics rather than compiler-diagnostic reasoning."
+    ],
+    pitfalls: [
+      "Fixing the last error in a cascade instead of the first real cause.",
+      "Adding clones, boxes, or explicit lifetimes everywhere without identifying the failing boundary.",
+      "Ignoring method receiver type, trait imports, or captured future state when debugging `E0599` or non-`Send` futures."
+    ],
+    practice: [
+      "Take one `E0308` mismatch and write down the expected and actual concrete types at the failing boundary.",
+      "Take one borrow-checker error and redraw the scopes of immutable and mutable access.",
+      "Use `rustc --explain` on one trait-bound or dyn-compatibility error and connect it back to the API design."
+    ],
+    sources: [
+      "https://doc.rust-lang.org/error_codes/error-index.html",
+      "https://doc.rust-lang.org/rustc/command-line-arguments.html#--explain-opt-code",
+      "https://doc.rust-lang.org/cargo/commands/cargo-check.html",
+      "https://doc.rust-lang.org/reference/trait-bounds.html",
+      "https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility",
+      "https://doc.rust-lang.org/rustc/json.html#diagnostics"
+    ],
+    related: ["ownership", "lifetimes", "traits", "concurrency", "tooling-validation"]
   },
   "syntax-idioms": {
     title: "Rust Syntax and Idioms",

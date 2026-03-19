@@ -5,6 +5,7 @@
 Load this file for ownership, borrowing, lifetimes, and smart-pointer selection.
 See also [concurrency.md](concurrency.md) for `Send`, `Sync`, locks, and async boundaries.
 See also [design-and-tooling.md](design-and-tooling.md) for traits, error handling, Cargo, and API design.
+See also [diagnostics-and-type-errors.md](diagnostics-and-type-errors.md) for borrow-checker, lifetime, and moved-value compiler errors.
 
 ## Ownership and Borrowing
 

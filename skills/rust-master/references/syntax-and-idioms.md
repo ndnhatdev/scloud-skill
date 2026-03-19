@@ -5,6 +5,7 @@
 Load this file for idiomatic Rust syntax, expression-oriented patterns, iterator and collection style, and common signature refactors.
 See also [foundations.md](foundations.md) for ownership and lifetime rules that justify these idioms.
 See also [design-and-tooling.md](design-and-tooling.md) for trait and API-boundary design.
+See also [diagnostics-and-type-errors.md](diagnostics-and-type-errors.md) when an idiom question is really a type-mismatch, inference, or receiver-resolution problem.
 
 ## Signature and Ownership Idioms
 
@@ -52,4 +53,3 @@ See also [design-and-tooling.md](design-and-tooling.md) for trait and API-bounda
 - https://doc.rust-lang.org/std/iter/trait.Iterator.html
 - https://doc.rust-lang.org/std/collections/hash_map/enum.Entry.html
 - https://doc.rust-lang.org/std/borrow/enum.Cow.html
-

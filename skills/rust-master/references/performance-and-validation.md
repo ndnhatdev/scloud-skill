@@ -5,6 +5,7 @@
 Load this file for profiling workflow, performance heuristics, binary-size and compile-time investigation, and the Rust toolchain used to validate correctness beyond `cargo test`.
 See also [syntax-and-idioms.md](syntax-and-idioms.md) for clarity-first idioms that often fix unnecessary allocation and control-flow churn.
 See also [community-lessons.md](community-lessons.md) for heuristics from real-world debugging and performance threads.
+See also [diagnostics-and-type-errors.md](diagnostics-and-type-errors.md) for compiler-error triage and `cargo check` or diagnostic JSON workflow.
 
 ## Performance Workflow
 
@@ -76,4 +77,3 @@ See also [community-lessons.md](community-lessons.md) for heuristics from real-w
 - https://github.com/taiki-e/cargo-hack
 - https://github.com/foresterre/cargo-msrv
 - https://github.com/obi1kenobi/cargo-semver-checks
-
