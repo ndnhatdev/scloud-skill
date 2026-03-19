@@ -8,6 +8,7 @@ description: Deep Rust language and production guidance for ownership, borrowing
 Use this skill for Rust language reasoning, code review, design choices, and study plans.
 Keep the core instructions short and load only the reference file that matches the request.
 For Tokio, Serde, Axum, SQLx, or Tracing crate-level guidance, prefer the separate `rust-ecosystem` skill if it is available.
+For wasm, embedded `no_std`, Embassy, or firmware-platform guidance, prefer the separate `rust-platforms` skill if it is available.
 
 ## Request Map
 
