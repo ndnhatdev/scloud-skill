@@ -14,6 +14,7 @@
     "audit:rust-platforms": "ts-node scripts/audit-skill.ts rust-platforms",
     "audit:rust-specializations": "ts-node scripts/audit-skill.ts rust-specializations",
     "audit:rust-delivery": "ts-node scripts/audit-skill.ts rust-delivery",
+    "audit:rust-router": "ts-node scripts/audit-skill.ts rust-router",
     "audit:rust-verification": "ts-node scripts/audit-skill.ts rust-verification",
     "pack": "ts-node scripts/packager.ts",
     "package:agent-skill": "python3 .agents/skills/skill-creator/scripts/package_skill.py",
