@@ -6,6 +6,7 @@ Load this file for profiling workflow, performance heuristics, binary-size and c
 See also [syntax-and-idioms.md](syntax-and-idioms.md) for clarity-first idioms that often fix unnecessary allocation and control-flow churn.
 See also [community-lessons.md](community-lessons.md) for heuristics from real-world debugging and performance threads.
 See also [diagnostics-and-type-errors.md](diagnostics-and-type-errors.md) for compiler-error triage and `cargo check` or diagnostic JSON workflow.
+See also [macros-and-metaprogramming.md](macros-and-metaprogramming.md) when compile times or generated code are driven by macro expansion.
 
 ## Performance Workflow
 

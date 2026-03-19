@@ -6,6 +6,9 @@ Load this file for trait design, `impl Trait` vs `dyn Trait`, error handling, Ca
 See also [foundations.md](foundations.md) for lifetime and ownership decisions that shape API boundaries.
 See also [concurrency.md](concurrency.md) for async, locks, and `Send` or `Sync` constraints.
 See also [diagnostics-and-type-errors.md](diagnostics-and-type-errors.md) for `E0277`, `E0599`, dyn-compatibility, and coherence-error triage.
+See also [advanced-type-system.md](advanced-type-system.md) for associated types, GATs, HRTBs, and const generics.
+See also [macros-and-metaprogramming.md](macros-and-metaprogramming.md) for declarative and procedural macros.
+See also [systems-interop.md](systems-interop.md) for FFI, layout, and `no_std` boundaries.
 
 ## Traits, Generics, and Trait Objects
 

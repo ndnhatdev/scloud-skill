@@ -4,10 +4,13 @@ type Topic =
   | "lifetimes"
   | "smart-pointers"
   | "traits"
+  | "advanced-type-system"
   | "error-handling"
   | "async-vs-threads"
   | "concurrency"
   | "diagnostics"
+  | "macros"
+  | "systems-interop"
   | "cargo"
   | "testing"
   | "unsafe"
@@ -58,10 +61,13 @@ const TOPIC_ORDER = [
   "lifetimes",
   "smart-pointers",
   "traits",
+  "advanced-type-system",
   "error-handling",
   "async-vs-threads",
   "concurrency",
   "diagnostics",
+  "macros",
+  "systems-interop",
   "syntax-idioms",
   "performance",
   "tooling-validation",
@@ -86,10 +92,13 @@ const TOPIC_KEYWORDS: Record<Topic, string[]> = {
   lifetimes: ["lifetime", "lifetimes", "'a", "borrowed output", "elision", "self-referential"],
   "smart-pointers": ["box", "rc", "arc", "weak", "cell", "refcell", "mutex", "rwlock", "oncelock", "oncecell"],
   traits: ["trait", "generic", "impl trait", "dyn trait", "object safe", "object-safe", "orphan", "coherence"],
+  "advanced-type-system": ["associated type", "associated types", "gat", "gats", "generic associated type", "hrtb", "higher ranked", "for<'a>", "const generic", "const generics"],
   "error-handling": ["result", "option", "panic", "error", "unwrap", "expect", "recoverable"],
   "async-vs-threads": ["async", "await", "tokio", "future", "futures", "thread", "threads", "i/o", "io", "cpu-bound", "spawn_blocking"],
   concurrency: ["send", "sync", "channel", "mutex", "rwlock", "arc", "atomic", "race", "shared state"],
   diagnostics: ["compiler error", "diagnostic", "error code", "rustc explain", "cargo check", "borrow checker", "e0277", "e0308", "e0382", "e0499", "e0502", "e0507", "e0597", "e0599", "type mismatch", "type annotation"],
+  macros: ["macro", "macros", "macro_rules", "proc macro", "proc-macro", "derive macro", "attribute macro", "tokenstream", "compile_error", "cargo expand"],
+  "systems-interop": ["pin", "unpin", "pinned", "future::poll", "poll", "ffi", "extern c", "cstr", "cstring", "repr(c)", "repr(transparent)", "repr(packed)", "no_std", "embedded", "abi", "layout"],
   "syntax-idioms": ["idiom", "idiomatic", "syntax", "pattern", "patterns", "iterator", "iterators", "entry", "collect", "match", "if let", "let else", "newtype"],
   performance: ["performance", "optimize", "profiling", "profile", "benchmark", "criterion", "allocation", "binary size", "bloat", "build timings", "compile time", "latency", "throughput"],
   "tooling-validation": ["clippy", "rustfmt", "cargo fmt", "cargo fix", "rust-analyzer", "miri", "nextest", "coverage", "llvm-cov", "udeps", "deny", "semver", "msrv", "cargo expand", "cargo hack"],
@@ -137,7 +146,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://rust-lang.github.io/api-guidelines/checklist.html",
       "https://nnethercote.github.io/perf-book/introduction.html"
     ],
-    related: ["ownership", "smart-pointers", "traits", "concurrency", "diagnostics", "syntax-idioms", "performance", "tooling-validation"]
+    related: ["ownership", "smart-pointers", "traits", "advanced-type-system", "concurrency", "diagnostics", "macros", "systems-interop", "syntax-idioms", "performance", "tooling-validation"]
   },
   ownership: {
     title: "Ownership and Borrowing",
@@ -288,7 +297,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://doc.rust-lang.org/reference/items/implementations.html",
       "https://doc.rust-lang.org/book/ch18-02-trait-objects.html"
     ],
-    related: ["smart-pointers", "api-design", "cargo"]
+    related: ["smart-pointers", "advanced-type-system", "api-design", "cargo"]
   },
   "error-handling": {
     title: "Error Handling",
@@ -440,7 +449,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility",
       "https://doc.rust-lang.org/rustc/json.html#diagnostics"
     ],
-    related: ["ownership", "lifetimes", "traits", "concurrency", "tooling-validation"]
+    related: ["ownership", "lifetimes", "traits", "advanced-type-system", "concurrency", "macros", "systems-interop", "tooling-validation"]
   },
   "syntax-idioms": {
     title: "Rust Syntax and Idioms",
@@ -565,7 +574,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://github.com/foresterre/cargo-msrv",
       "https://github.com/obi1kenobi/cargo-semver-checks"
     ],
-    related: ["performance", "testing", "cargo", "unsafe"]
+    related: ["performance", "testing", "cargo", "unsafe", "macros"]
   },
   "community-lessons": {
     title: "Community Lessons and Senior Heuristics",
@@ -610,6 +619,123 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://users.rust-lang.org/t/performance-difference-between-iterator-and-for-loop/50254"
     ],
     related: ["syntax-idioms", "performance", "concurrency", "smart-pointers"]
+  },
+  "advanced-type-system": {
+    title: "Advanced Type System",
+    summary:
+      "Associated types, GATs, HRTBs, and const generics are the right tools only when they encode a real invariant that simpler APIs cannot express cleanly.",
+    rules: [
+      "Prefer associated types when each implementation should choose one logical output type once.",
+      "Use GATs when an associated type family must depend on a lifetime, type, or const parameter.",
+      "Use `for<'a>` bounds when a callback or trait bound must work for any borrow lifetime, not one captured lifetime.",
+      "Use const generics when a value is part of the type-level contract rather than ordinary runtime data.",
+      "If the API becomes hard to explain, test whether owned values or simpler generic shapes would be clearer."
+    ],
+    useWhen: [
+      "You are designing lending APIs, generic libraries, or type-level invariants.",
+      "You are deciding between associated types and generic parameters.",
+      "You are debugging advanced bound syntax such as GATs, HRTBs, or const generics."
+    ],
+    avoidWhen: [
+      "A simpler owned API or ordinary generic parameter already expresses the need.",
+      "You are adding advanced type features only for elegance rather than a concrete invariant."
+    ],
+    pitfalls: [
+      "Using GATs where an owned iterator or value-returning API would be easier to use.",
+      "Adding HRTBs without being able to explain why the bound must hold for any lifetime.",
+      "Making public const-generic APIs harder to infer than the benefit justifies."
+    ],
+    practice: [
+      "Compare an associated-type trait and a generic-parameter trait for the same abstraction.",
+      "Refactor one borrowing iterator-style API and decide whether a GAT truly improves it.",
+      "Take one fixed-size buffer API and justify whether a const generic belongs in the type."
+    ],
+    sources: [
+      "https://doc.rust-lang.org/book/ch20-02-advanced-traits.html",
+      "https://doc.rust-lang.org/reference/items/associated-items.html",
+      "https://doc.rust-lang.org/reference/trait-bounds.html",
+      "https://doc.rust-lang.org/reference/items/generics.html",
+      "https://doc.rust-lang.org/nomicon/hrtb.html"
+    ],
+    related: ["traits", "diagnostics", "api-design", "lifetimes"]
+  },
+  macros: {
+    title: "Macros and Metaprogramming",
+    summary:
+      "Rust macros should reduce syntax duplication or generate code ordinary Rust cannot express, without turning the expansion into an unreadable second language.",
+    rules: [
+      "Prefer functions, traits, and generics before reaching for macros.",
+      "Use `macro_rules!` for local syntactic repetition and proc macros only when syntax-aware generation is truly required.",
+      "Keep expansions simple enough that generated control flow and allocation behavior remain understandable.",
+      "Treat proc macros as compile-time dependencies with real build-time and maintenance cost.",
+      "Use precise spans and explicit compile errors rather than opaque panics when generation fails."
+    ],
+    useWhen: [
+      "You are deciding between ordinary abstractions and metaprogramming.",
+      "You are building derives, attribute macros, or reusable syntax shorthands.",
+      "You are debugging surprising generated code with `cargo expand`."
+    ],
+    avoidWhen: [
+      "A normal function, trait, or generic implementation already communicates the behavior clearly.",
+      "The macro would hide non-obvious control flow or allocation costs."
+    ],
+    pitfalls: [
+      "Using proc macros where `macro_rules!` or ordinary Rust would suffice.",
+      "Shipping macros with poor error spans that make downstream diagnostics unreadable.",
+      "Ignoring compile-time cost and expansion complexity in large codebases."
+    ],
+    practice: [
+      "Replace one repetitive pattern with a helper function and compare it to a macro alternative.",
+      "Inspect one derive-heavy call site with `cargo expand` and map it back to the source.",
+      "Take one proc-macro idea and justify why syntax-aware generation is necessary."
+    ],
+    sources: [
+      "https://doc.rust-lang.org/reference/macros.html",
+      "https://doc.rust-lang.org/stable/reference/procedural-macros.html",
+      "https://doc.rust-lang.org/book/ch20-05-macros.html"
+    ],
+    related: ["tooling-validation", "diagnostics", "performance", "api-design"]
+  },
+  "systems-interop": {
+    title: "Pinning, FFI, Layout, and no_std",
+    summary:
+      "At Rust's systems boundary, correctness depends on invariants the compiler cannot infer for you: address stability, ABI agreement, layout assumptions, and runtime availability.",
+    rules: [
+      "Use pinning only for address-sensitive values such as self-referential machinery, intrusive structures, or low-level future implementations.",
+      "Keep raw FFI surfaces narrow and wrap them in safe Rust APIs as soon as possible.",
+      "Use `repr(C)` and `repr(transparent)` for real ABI or layout contracts, not folklore performance tuning.",
+      "Treat `repr(packed)` and field references with extreme care; layout tricks easily become UB.",
+      "Use `no_std` when the target lacks the standard runtime, and keep shared logic `std`-light even when the final binary uses `std`."
+    ],
+    useWhen: [
+      "You are implementing lower-level async machinery, raw FFI, or platform-specific code.",
+      "You are reviewing ABI, layout, or unsafe boundary assumptions.",
+      "You are designing code meant to run in embedded, kernel, or otherwise `no_std` environments."
+    ],
+    avoidWhen: [
+      "The problem is higher-level async orchestration rather than `Pin` or `Future::poll` internals.",
+      "You are adding layout attributes or `no_std` constraints without a concrete platform need."
+    ],
+    pitfalls: [
+      "Exposing pinning in public APIs when no address-sensitive invariant exists.",
+      "Assuming Rust's default layout is stable for FFI or serialization.",
+      "Claiming `no_std` support while quietly depending on `std` behavior or allocator assumptions."
+    ],
+    practice: [
+      "Audit one FFI boundary and identify the exact unsafe contract for types, ownership, and lifetimes.",
+      "Explain why `Future::poll` uses `Pin<&mut Self>` and when a type is effectively `Unpin`.",
+      "Take one crate and list what would need to change to make its core logic `no_std`-friendly."
+    ],
+    sources: [
+      "https://doc.rust-lang.org/std/pin/",
+      "https://doc.rust-lang.org/std/future/trait.Future.html",
+      "https://doc.rust-lang.org/nomicon/ffi.html",
+      "https://doc.rust-lang.org/reference/type-layout.html",
+      "https://doc.rust-lang.org/beta/std/ffi/struct.CString.html",
+      "https://doc.rust-lang.org/std/ffi/struct.CStr.html",
+      "https://docs.rust-embedded.org/book/intro/no-std.html"
+    ],
+    related: ["unsafe", "concurrency", "diagnostics", "performance"]
   },
   cargo: {
     title: "Cargo, Modules, and Workspace Structure",
@@ -720,7 +846,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html",
       "https://doc.rust-lang.org/edition-guide/rust-2024/index.html"
     ],
-    related: ["concurrency", "lifetimes", "api-design"]
+    related: ["concurrency", "lifetimes", "systems-interop", "api-design"]
   },
   "api-design": {
     title: "Rust API Design",
@@ -759,7 +885,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://doc.rust-lang.org/reference/items/implementations.html",
       "https://doc.rust-lang.org/reference/types/impl-trait.html"
     ],
-    related: ["traits", "cargo", "error-handling", "syntax-idioms", "community-lessons"]
+    related: ["traits", "advanced-type-system", "cargo", "error-handling", "syntax-idioms", "community-lessons"]
   }
 };
 

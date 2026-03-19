@@ -6,6 +6,8 @@ Load this file for Rust compiler-error triage: borrow-checker failures, type mis
 See also [foundations.md](foundations.md) for ownership and lifetime rules behind borrow errors.
 See also [concurrency.md](concurrency.md) for `Send`/`Sync`, async, and lock-related diagnostics.
 See also [design-and-tooling.md](design-and-tooling.md) for trait and API design that prevents many of these errors.
+See also [advanced-type-system.md](advanced-type-system.md) for GAT, HRTB, associated-type, and const-generic error families.
+See also [macros-and-metaprogramming.md](macros-and-metaprogramming.md) when diagnostics originate from macro expansion.
 
 ## Triage Workflow
 
