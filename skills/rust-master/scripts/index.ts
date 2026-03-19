@@ -10,7 +10,11 @@ type Topic =
   | "cargo"
   | "testing"
   | "unsafe"
-  | "api-design";
+  | "api-design"
+  | "syntax-idioms"
+  | "performance"
+  | "tooling-validation"
+  | "community-lessons";
 
 type Goal = "learn" | "choose" | "review" | "debug" | "design" | "study-plan";
 type Depth = "quick" | "standard" | "deep";
@@ -56,6 +60,10 @@ const TOPIC_ORDER = [
   "error-handling",
   "async-vs-threads",
   "concurrency",
+  "syntax-idioms",
+  "performance",
+  "tooling-validation",
+  "community-lessons",
   "cargo",
   "testing",
   "unsafe",
@@ -66,7 +74,8 @@ const RESEARCH_BASELINE = [
   "Official docs checked on 2026-03-19.",
   "Rust 2024 edition page lists release version 1.85.0.",
   "Stable std pages reviewed for this skill showed std 1.94.0 with build date 2026-03-02.",
-  "Guidance is intentionally biased toward official Rust sources and Rust project guidance."
+  "Guidance is intentionally biased toward official Rust sources and Rust project guidance.",
+  "Community heuristics were cross-checked against current Tokio docs and Rust forum discussions reviewed on 2026-03-19."
 ] as const;
 
 const TOPIC_KEYWORDS: Record<Topic, string[]> = {
@@ -78,6 +87,10 @@ const TOPIC_KEYWORDS: Record<Topic, string[]> = {
   "error-handling": ["result", "option", "panic", "error", "unwrap", "expect", "recoverable"],
   "async-vs-threads": ["async", "await", "tokio", "future", "futures", "thread", "threads", "i/o", "io", "cpu-bound", "spawn_blocking"],
   concurrency: ["send", "sync", "channel", "mutex", "rwlock", "arc", "atomic", "race", "shared state"],
+  "syntax-idioms": ["idiom", "idiomatic", "syntax", "pattern", "patterns", "iterator", "iterators", "entry", "collect", "match", "if let", "let else", "newtype"],
+  performance: ["performance", "optimize", "profiling", "profile", "benchmark", "criterion", "allocation", "binary size", "bloat", "build timings", "compile time", "latency", "throughput"],
+  "tooling-validation": ["clippy", "rustfmt", "cargo fmt", "cargo fix", "rust-analyzer", "miri", "nextest", "coverage", "llvm-cov", "udeps", "deny", "semver", "msrv", "cargo expand", "cargo hack"],
+  "community-lessons": ["community", "forum", "best practice", "anti-pattern", "senior", "real world", "practical", "heuristic", "classic mistake"],
   cargo: ["cargo", "feature", "features", "workspace", "workspaces", "module", "mod", "lib.rs", "main.rs", "crate"],
   testing: ["test", "tests", "integration test", "unit test", "cfg(test)", "doc test", "cargo test"],
   unsafe: ["unsafe", "ffi", "raw pointer", "ub", "soundness", "unsafe_op_in_unsafe_fn"],
@@ -118,9 +131,10 @@ const TOPICS: Record<Topic, TopicCard> = {
     sources: [
       "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html",
       "https://doc.rust-lang.org/book/ch16-04-extensible-concurrency-sync-and-send.html",
-      "https://rust-lang.github.io/api-guidelines/checklist.html"
+      "https://rust-lang.github.io/api-guidelines/checklist.html",
+      "https://nnethercote.github.io/perf-book/introduction.html"
     ],
-    related: ["ownership", "smart-pointers", "traits", "concurrency"]
+    related: ["ownership", "smart-pointers", "traits", "concurrency", "syntax-idioms", "performance", "tooling-validation"]
   },
   ownership: {
     title: "Ownership and Borrowing",
@@ -385,6 +399,175 @@ const TOPICS: Record<Topic, TopicCard> = {
     ],
     related: ["async-vs-threads", "smart-pointers", "unsafe"]
   },
+  "syntax-idioms": {
+    title: "Rust Syntax and Idioms",
+    summary:
+      "Idiomatic Rust is mostly about making ownership, control flow, and collection transforms obvious without hiding the cost model.",
+    rules: [
+      "Prefer signatures that make ownership obvious: borrowed inputs for read-only use, owned inputs for storage or transfer.",
+      "Use `match`, `if let`, `while let`, and `let-else` to make state transitions and failure exits explicit.",
+      "Prefer iterators when they directly express the transformation; prefer `for` loops when state or early exits are clearer.",
+      "Use `HashMap::entry` and similar collection APIs instead of manual contains-plus-insert logic.",
+      "Prefer enums, newtypes, and builders over bool flags or ambiguous strings in APIs.",
+      "Do not force borrowed returns or iterator-heavy APIs when an owned `Vec<T>` or value type is clearer."
+    ],
+    useWhen: [
+      "You are refactoring code that compiles but feels unidiomatic or overly verbose.",
+      "You are deciding between loops and iterators, `match` and nested `if`, or raw values versus stronger domain types.",
+      "You want review guidance on signatures, control flow, and collection usage."
+    ],
+    avoidWhen: [
+      "You are optimizing for a measured hot path where a plainer imperative loop is both faster and clearer.",
+      "You are adding abstraction only to look clever rather than to clarify ownership or behavior."
+    ],
+    pitfalls: [
+      "Chaining combinators until the control flow is harder to reason about than a loop.",
+      "Using generic conversion bounds everywhere and making call sites or errors worse.",
+      "Returning borrowed or iterator-based outputs that leak temporary internals or lifetime complexity."
+    ],
+    practice: [
+      "Refactor one `contains_key` plus `insert` branch into an `entry`-based update.",
+      "Rewrite one nested `match` or `if` ladder using `let-else` or early returns.",
+      "Take one API with a bool flag and redesign it using an enum or builder."
+    ],
+    sources: [
+      "https://doc.rust-lang.org/book/ch06-02-match.html",
+      "https://doc.rust-lang.org/book/ch13-02-iterators.html",
+      "https://doc.rust-lang.org/std/iter/trait.Iterator.html",
+      "https://doc.rust-lang.org/std/collections/hash_map/enum.Entry.html",
+      "https://doc.rust-lang.org/std/borrow/enum.Cow.html"
+    ],
+    related: ["ownership", "traits", "api-design", "performance"]
+  },
+  performance: {
+    title: "Performance and Profiling",
+    summary:
+      "Senior Rust performance work starts with measurement, workload classification, and algorithm or data-layout changes before micro-optimizing syntax.",
+    rules: [
+      "Measure in release mode before changing code for speed.",
+      "Profile before optimizing; intuition is unreliable for hot spots.",
+      "Look for algorithm, data-structure, allocation, and repeated-work wins before low-level tuning.",
+      "Treat macro expansion, monomorphization, and feature sprawl as compile-time and binary-size costs.",
+      "Optimize hot paths deliberately and keep cold-path code simple."
+    ],
+    useWhen: [
+      "You are diagnosing slow code, large binaries, or long compile times.",
+      "You need a rubric for deciding whether an optimization is real or speculative.",
+      "You are reviewing a performance PR and need concrete red flags."
+    ],
+    avoidWhen: [
+      "You are trying to optimize debug builds or benchmark with ad-hoc wall-clock prints.",
+      "You are rewriting clear code without evidence that the path matters."
+    ],
+    pitfalls: [
+      "Claiming iterator, async, or allocation costs are the bottleneck without profiling.",
+      "Trading a tiny runtime win for large API, compile-time, or safety complexity.",
+      "Using macro-heavy or generic-heavy designs that explode compile times or binary size."
+    ],
+    practice: [
+      "Take one hot path and classify whether the bottleneck is CPU, allocation, I/O wait, or contention.",
+      "Run a benchmark in release mode and compare an algorithmic change before any micro-optimization.",
+      "Inspect one build for macro or monomorphization bloat before changing public APIs."
+    ],
+    sources: [
+      "https://nnethercote.github.io/perf-book/introduction.html",
+      "https://nnethercote.github.io/perf-book/general-tips.html",
+      "https://nnethercote.github.io/perf-book/compile-times.html",
+      "https://docs.rs/crate/criterion/latest",
+      "https://github.com/RazrFalcon/cargo-bloat"
+    ],
+    related: ["tooling-validation", "syntax-idioms", "cargo", "async-vs-threads"]
+  },
+  "tooling-validation": {
+    title: "Tooling and Validation",
+    summary:
+      "Rust code quality scales when validation moves from intuition to repeatable tool checks: linting, UB detection, feature-matrix checks, dependency hygiene, coverage, and release compatibility.",
+    rules: [
+      "Run `cargo fmt` and `cargo clippy` by default; tighten CI lints selectively and intentionally.",
+      "Use `cargo fix` for machine-applicable compiler and edition migrations, then review the diff.",
+      "Use `cargo expand` for macro debugging, `cargo miri test` for unsafe and aliasing risks, and `criterion` for benchmark evidence.",
+      "Use `cargo nextest run`, `cargo llvm-cov`, `cargo deny`, `cargo udeps`, and `cargo hack` to harden large-project CI.",
+      "Use `cargo msrv` and `cargo semver-checks` when maintaining a published library or compatibility promise."
+    ],
+    useWhen: [
+      "You need to standardize Rust validation beyond `cargo test`.",
+      "You are designing CI for a library, workspace, or safety-sensitive crate.",
+      "You are debugging macro expansion, UB, flaky tests, or dependency graph issues."
+    ],
+    avoidWhen: [
+      "You are adding every tool to a tiny crate with no release or maintenance surface.",
+      "You are treating tool output as a substitute for design review."
+    ],
+    pitfalls: [
+      "Relying on `cargo test` alone for unsafe or feature-rich crates.",
+      "Turning on broad lint groups without a policy and drowning the team in low-value noise.",
+      "Skipping semver, MSRV, or dependency-policy checks on published crates."
+    ],
+    practice: [
+      "Write a minimal CI matrix that runs `fmt`, `clippy`, tests, and one deeper check relevant to the crate's risk.",
+      "Use `cargo expand` on one macro-heavy function and explain the generated shape.",
+      "Run Miri on one unsafe or pointer-heavy test and record what class of bug it can and cannot prove absent."
+    ],
+    sources: [
+      "https://doc.rust-lang.org/book/appendix-04-useful-development-tools.html",
+      "https://doc.rust-lang.org/cargo/commands/cargo-fix.html",
+      "https://rust-lang.github.io/rust-clippy/stable/index.html",
+      "https://github.com/rust-lang/miri",
+      "https://nexte.st/",
+      "https://github.com/dtolnay/cargo-expand",
+      "https://github.com/taiki-e/cargo-llvm-cov",
+      "https://github.com/EmbarkStudios/cargo-deny",
+      "https://github.com/est31/cargo-udeps",
+      "https://github.com/taiki-e/cargo-hack",
+      "https://github.com/foresterre/cargo-msrv",
+      "https://github.com/obi1kenobi/cargo-semver-checks"
+    ],
+    related: ["performance", "testing", "cargo", "unsafe"]
+  },
+  "community-lessons": {
+    title: "Community Lessons and Senior Heuristics",
+    summary:
+      "The classic Rust lessons are usually about paying complexity only where it earns something real: do not fight ownership for aesthetics, do not over-shared-state async code, and do not optimize without evidence.",
+    rules: [
+      "Treat `clone()` as a costed tool, not a moral failure: harmless at ownership boundaries, suspicious in hot loops.",
+      "If borrow checking gets ugly, redesign scope or ownership before adding `RefCell<T>` or long lifetime plumbing.",
+      "Prefer message passing or dedicated owner tasks before defaulting to `Arc<Mutex<T>>` in async services.",
+      "Use async mutexes only when the guard must live across `.await`; otherwise a sync mutex is often better even inside async code.",
+      "Prefer enums for closed behavior sets and owned returns when iterator or borrow-heavy APIs stop being ergonomic."
+    ],
+    useWhen: [
+      "You want pragmatic guidance on what experienced Rust engineers usually choose.",
+      "You are reviewing code that technically works but feels over-engineered or fragile.",
+      "You need anti-pattern radar drawn from repeated forum problems."
+    ],
+    avoidWhen: [
+      "You need a formal language guarantee; use official docs for that.",
+      "You are cargo-culting a forum heuristic into a different workload or architecture."
+    ],
+    pitfalls: [
+      "Treating zero-copy as a goal when an owned boundary would simplify the whole design.",
+      "Replacing simple ownership transfer with shared mutable state too early.",
+      "Assuming `RwLock<T>` or async mutexes are faster without contention evidence."
+    ],
+    practice: [
+      "Take one `Arc<Mutex<T>>` design and ask whether a dedicated worker task plus channel would simplify it.",
+      "Review one API that returns borrowed views and ask whether an owned return would reduce lifetime surface.",
+      "Label each clone in a real diff as boundary clone, convenience clone, or hot-path clone."
+    ],
+    sources: [
+      "https://docs.rs/tokio/latest/tokio/sync/struct.Mutex.html",
+      "https://users.rust-lang.org/t/std-mutex-vs-futures-mutex-vs-futures-lock-mutex-for-async/41710",
+      "https://users.rust-lang.org/t/what-makes-async-mutex-more-expensive-than-sync-mutex/100806",
+      "https://users.rust-lang.org/t/which-mutex-to-use-parking-lot-or-std-sync/85060",
+      "https://users.rust-lang.org/t/solved-should-i-clone-to-avoid-borrow-check/23815",
+      "https://users.rust-lang.org/t/why-use-clone/116632",
+      "https://users.rust-lang.org/t/implementing-iterator-for-vec/71398",
+      "https://users.rust-lang.org/t/return-an-iterator-from-struct-in-refcell/86580",
+      "https://users.rust-lang.org/t/returning-an-iterator/24402",
+      "https://users.rust-lang.org/t/performance-difference-between-iterator-and-for-loop/50254"
+    ],
+    related: ["syntax-idioms", "performance", "concurrency", "smart-pointers"]
+  },
   cargo: {
     title: "Cargo, Modules, and Workspace Structure",
     summary:
@@ -421,7 +604,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://doc.rust-lang.org/cargo/reference/workspaces.html",
       "https://doc.rust-lang.org/stable/cargo/reference/features.html"
     ],
-    related: ["testing", "api-design", "traits"]
+    related: ["testing", "api-design", "traits", "tooling-validation", "performance"]
   },
   testing: {
     title: "Testing Strategy",
@@ -456,7 +639,7 @@ const TOPICS: Record<Topic, TopicCard> = {
     sources: [
       "https://doc.rust-lang.org/book/ch11-03-test-organization.html"
     ],
-    related: ["cargo", "error-handling", "api-design"]
+    related: ["cargo", "error-handling", "api-design", "tooling-validation"]
   },
   unsafe: {
     title: "Unsafe Rust",
@@ -533,7 +716,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://doc.rust-lang.org/reference/items/implementations.html",
       "https://doc.rust-lang.org/reference/types/impl-trait.html"
     ],
-    related: ["traits", "cargo", "error-handling"]
+    related: ["traits", "cargo", "error-handling", "syntax-idioms", "community-lessons"]
   }
 };
 
