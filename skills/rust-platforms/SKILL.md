@@ -1,6 +1,6 @@
 ---
 name: rust-platforms
-description: Rust platform guidance for WebAssembly, embedded no_std, Embassy async embedded, and firmware architecture. Use when Codex needs to design or review wasm32 targets, wasm-bindgen interop, wasm testing and size work, no_std embedded crates, interrupts, linker and memory layout concerns, Embassy tasks and executors, or end-to-end embedded firmware structure in Rust.
+description: Rust platform guidance for WebAssembly, embedded no_std, Embassy async embedded, platform tooling, community lessons, and firmware architecture. Use when Codex needs to design or review wasm32 targets, wasm-bindgen interop, wasm testing and size work, no_std embedded crates, interrupts, linker and memory layout concerns, Embassy tasks and executors, probe-rs or defmt workflow, or end-to-end embedded firmware structure in Rust.
 ---
 
 # Rust Platforms
@@ -19,6 +19,10 @@ Treat `wasm`, `embedded/no_std`, and `embassy` as focused subdomains inside this
   load [references/embassy.md](references/embassy.md)
 - Integrated firmware shape using no_std + HAL/PAC + Embassy + logging/flash workflow:
   load [references/firmware-stack.md](references/firmware-stack.md)
+- `wasm-pack`, `wasm-bindgen-test`, `wasm-opt`, `twiggy`, `probe-rs`, `defmt`, embedded flashing/debugging, or target-specific validation:
+  load [references/tooling-and-debugging.md](references/tooling-and-debugging.md)
+- Community heuristics, forum-tested anti-patterns, or "what usually goes wrong" in wasm or embedded Rust:
+  load [references/platform-lessons.md](references/platform-lessons.md)
 
 ## Workflow
 
@@ -28,6 +32,8 @@ Treat `wasm`, `embedded/no_std`, and `embassy` as focused subdomains inside this
    - Embedded no_std: runtime absence, interrupts, critical sections, memory layout, linker and startup
    - Embassy: async executor model, task spawning, timer and sync primitives, ISR integration
    - Firmware stack: app structure, task ownership, board support, flashing, logging, and integration tests
+   - Tooling and debugging: wasm tests, size work, probe-based flashing, logging, and target validation
+   - Platform lessons: recurring forum and ecosystem mistakes that do not show up in the happy-path docs
 3. Load only the relevant reference file. If the question crosses layers, load at most two reference files.
 4. Prefer official project docs and book-style primary sources.
 5. Structure the answer around:
@@ -43,6 +49,7 @@ Treat `wasm`, `embedded/no_std`, and `embassy` as focused subdomains inside this
 - In `no_std`, treat runtime absence, linker layout, and interrupt concurrency as first-class design constraints.
 - In Embassy, do not block the executor; async tasks must yield cooperatively.
 - In embedded firmware, make startup, resource ownership, interrupts, executor use, and flashing/debug workflow explicit.
+- Validate on the real target path early; native tests and host builds do not prove wasm or firmware behavior.
 
 ## Review Priorities
 
@@ -53,6 +60,8 @@ When auditing platform-focused Rust code, check these first:
 - unsafe interrupt sharing, overly broad critical sections, or unclear memory-layout assumptions
 - Embassy tasks that block, misuse spawners, or hide resource ownership
 - firmware with no clear bootstrap order, task ownership model, logging plan, or deployment path
+- missing target-specific tooling such as wasm-target tests, probe-based run/attach flow, or embedded logging and panic strategy
+- community-known traps such as `cfg_attr(not(test), no_std)`, overusing global critical sections, or assuming all wasm targets behave the same
 
 ## Navigation
 
@@ -60,10 +69,14 @@ When auditing platform-focused Rust code, check these first:
 - Load [references/embedded-no-std.md](references/embedded-no-std.md) for no_std, interrupts, linker layout, and embedded structure.
 - Load [references/embassy.md](references/embassy.md) for Embassy executor, tasks, timers, and async embedded coordination.
 - Load [references/firmware-stack.md](references/firmware-stack.md) for integrated firmware architecture.
+- Load [references/tooling-and-debugging.md](references/tooling-and-debugging.md) for platform-specific testing, flashing, logging, and size/debug workflow.
+- Load [references/platform-lessons.md](references/platform-lessons.md) for community heuristics and anti-patterns.
 
 ## Source Policy
 
 - Prefer the Rust and WebAssembly docs, wasm-bindgen guide, Embedded Rust Book, Embedonomicon, Embassy Book, and official docs.rs pages for Embassy crates.
+- Use official tool docs for `wasm-pack`, `probe-rs`, and `defmt` when operational workflow matters.
+- Use community threads as heuristics and failure-pattern evidence, not as substitutes for platform contracts.
 - Use exact dates when crate or target behavior may have changed.
 - Separate target constraints from ordinary Rust-language constraints; route general language reasoning back to `rust-master`.
 
@@ -84,6 +97,8 @@ input_schema:
         - embedded-no-std
         - embassy
         - firmware-stack
+        - tooling-debugging
+        - platform-lessons
         - all
     goal:
       type: string

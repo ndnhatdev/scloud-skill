@@ -4,6 +4,8 @@
 
 Load this file for Embassy async embedded design: executor choice, task declarations, spawners, timers, channels, signals, and interrupt-driven async firmware.
 Use `rust-master` for language-level async, pinning, or diagnostics that sit underneath Embassy behavior.
+See also [tooling-and-debugging.md](tooling-and-debugging.md) for logging and debug workflow around Embassy-based firmware.
+See also [platform-lessons.md](platform-lessons.md) for task-ownership and async-overuse heuristics.
 
 ## Core Rules
 
@@ -38,4 +40,3 @@ Use `rust-master` for language-level async, pinning, or diagnostics that sit und
 - https://docs.embassy.dev/embassy-executor/git/cortex-m/struct.SpawnToken.html
 - https://docs.rs/embassy-time/latest/embassy_time/struct.Timer.html
 - https://docs.rs/embassy-sync/latest/embassy_sync/
-

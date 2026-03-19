@@ -4,6 +4,8 @@
 
 Load this file for embedded Rust without the standard runtime: `#![no_std]`, startup and linker layout, interrupts, critical sections, PAC/HAL/BSP layering, and memory-mapped peripherals.
 Use `rust-master` for general unsafe and ownership rules underneath these patterns.
+See also [tooling-and-debugging.md](tooling-and-debugging.md) for probe-based flashing, logging, and target validation.
+See also [platform-lessons.md](platform-lessons.md) for testing and critical-section heuristics from the community.
 
 ## Core Rules
 
@@ -38,4 +40,3 @@ Use `rust-master` for general unsafe and ownership rules underneath these patter
 - https://docs.rust-embedded.org/book/concurrency/
 - https://docs.rust-embedded.org/embedonomicon/
 - https://docs.rust-embedded.org/embedonomicon/memory-layout.html
-

@@ -4,6 +4,8 @@
 
 Load this file for Rust on WebAssembly: `wasm32-unknown-unknown`, `wasm-bindgen`, JS interop, target-specific dependencies, testing, and size-oriented review.
 Use `rust-master` for general ownership or type-system questions hidden behind a wasm API.
+See also [tooling-and-debugging.md](tooling-and-debugging.md) for `wasm-pack test`, `wasm-opt`, and size/debug workflow.
+See also [platform-lessons.md](platform-lessons.md) for community heuristics about target fragmentation and JS boundary mistakes.
 
 ## Core Rules
 
@@ -38,4 +40,3 @@ Use `rust-master` for general ownership or type-system questions hidden behind a
 - https://rustwasm.github.io/wasm-bindgen/reference/optimize-size.html
 - https://docs.rs/wasm-bindgen/latest/wasm_bindgen/prelude/
 - https://docs.rs/serde-wasm-bindgen
-

@@ -1,4 +1,4 @@
-type Topic = "overview" | "wasm" | "embedded-no-std" | "embassy" | "firmware-stack";
+type Topic = "overview" | "wasm" | "embedded-no-std" | "embassy" | "firmware-stack" | "tooling-debugging" | "platform-lessons";
 type Goal = "learn" | "choose" | "review" | "debug" | "design" | "study-plan";
 type Depth = "quick" | "standard" | "deep";
 type TopicRequest = Topic | "all";
@@ -33,7 +33,7 @@ type SkillOutput = {
   sources: string[];
 };
 
-const TOPIC_ORDER = ["overview", "wasm", "embedded-no-std", "embassy", "firmware-stack"] as const satisfies readonly Topic[];
+const TOPIC_ORDER = ["overview", "wasm", "embedded-no-std", "embassy", "firmware-stack", "tooling-debugging", "platform-lessons"] as const satisfies readonly Topic[];
 
 const RESEARCH_BASELINE = [
   "Official platform docs reviewed on 2026-03-19.",
@@ -47,7 +47,9 @@ const TOPIC_KEYWORDS: Record<Topic, string[]> = {
   wasm: ["wasm", "webassembly", "wasm32", "wasm-bindgen", "wasm-pack", "web-sys", "js-sys", "browser", "node", "javascript interop"],
   "embedded-no-std": ["embedded", "no_std", "#![no_std]", "interrupt", "interrupts", "linker", "memory.x", "pac", "hal", "bsp", "critical section", "memory mapped"],
   embassy: ["embassy", "embassy-executor", "embassy-time", "embassy-sync", "spawner", "sendspawner", "spawntoken", "embassy task", "embassy main", "task ownership", "interrupt executor"],
-  "firmware-stack": ["firmware stack", "board bring-up", "bringup", "flashing", "probe-rs", "firmware architecture", "hal pac bsp", "embedded async architecture"]
+  "firmware-stack": ["firmware stack", "board bring-up", "bringup", "flashing", "probe-rs", "firmware architecture", "hal pac bsp", "embedded async architecture"],
+  "tooling-debugging": ["wasm-pack", "wasm-bindgen-test", "wasm-opt", "twiggy", "probe-rs", "defmt", "flash", "flashing", "attach", "rtt", "cargo run on target", "tooling"],
+  "platform-lessons": ["community", "forum", "anti-pattern", "pitfall", "pitfalls", "mistake", "mistakes", "lessons learned", "lessons", "best practice", "what goes wrong", "watch for", "heuristic", "target selection", "no_std tests"]
 };
 
 const TOPICS: Record<Topic, TopicCard> = {
@@ -86,7 +88,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rust-embedded.org/book/",
       "https://embassy.dev/book/"
     ],
-    related: ["wasm", "embedded-no-std", "embassy", "firmware-stack"]
+    related: ["wasm", "embedded-no-std", "embassy", "firmware-stack", "tooling-debugging", "platform-lessons"]
   },
   wasm: {
     title: "Rust Wasm",
@@ -127,7 +129,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rs/wasm-bindgen/latest/wasm_bindgen/prelude/",
       "https://docs.rs/serde-wasm-bindgen"
     ],
-    related: ["firmware-stack"]
+    related: ["tooling-debugging", "platform-lessons", "firmware-stack"]
   },
   "embedded-no-std": {
     title: "Embedded no_std",
@@ -168,7 +170,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rust-embedded.org/embedonomicon/",
       "https://docs.rust-embedded.org/embedonomicon/memory-layout.html"
     ],
-    related: ["embassy", "firmware-stack"]
+    related: ["embassy", "tooling-debugging", "platform-lessons", "firmware-stack"]
   },
   embassy: {
     title: "Embassy Async Embedded",
@@ -209,7 +211,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rs/embassy-time/latest/embassy_time/struct.Timer.html",
       "https://docs.rs/embassy-sync/latest/embassy_sync/"
     ],
-    related: ["embedded-no-std", "firmware-stack"]
+    related: ["embedded-no-std", "tooling-debugging", "platform-lessons", "firmware-stack"]
   },
   "firmware-stack": {
     title: "Firmware Stack Architecture",
@@ -247,7 +249,86 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rust-embedded.org/embedonomicon/memory-layout.html",
       "https://embassy.dev/book/"
     ],
-    related: ["embedded-no-std", "embassy", "wasm"]
+    related: ["embedded-no-std", "embassy", "tooling-debugging", "platform-lessons", "wasm"]
+  },
+  "tooling-debugging": {
+    title: "Platform Tooling and Debugging",
+    summary:
+      "Platform Rust becomes usable in practice only when the repo encodes the real target workflow: wasm-target tests, size inspection, flash-and-run commands, logging, and attach-time debugging.",
+    rules: [
+      "Validate on the actual target path early: wasm tests on wasm, firmware on hardware or a realistic target path.",
+      "Use target-aware tools such as `wasm-pack test`, `wasm-bindgen-test`, `probe-rs`, and `defmt` rather than approximating with host-only workflows.",
+      "Make flash, run, attach, and logging workflow reproducible through repo config instead of shell folklore.",
+      "Measure final artifacts when size matters, and use tools like `wasm-opt` and `twiggy` before rewriting code blindly.",
+      "Treat panic strategy, logging transport, and runner configuration as part of the platform contract."
+    ],
+    useWhen: [
+      "You are standardizing CI, debugging workflow, or target-specific validation.",
+      "You are investigating wasm size or embedded flash-and-log workflow.",
+      "You want operational guidance rather than only architecture rules."
+    ],
+    avoidWhen: [
+      "You are discussing pure language rules with no target-specific tooling implications.",
+      "You are adding tools without deciding what risk or workflow they are meant to support."
+    ],
+    pitfalls: [
+      "Relying on native tests to imply wasm or no_std correctness.",
+      "Having no canonical flash, attach, or log path in the repo.",
+      "Optimizing size without measuring the final wasm artifact or embedded binary path."
+    ],
+    practice: [
+      "Write the one command path a new engineer should use to test wasm behavior and the one path to flash and inspect firmware.",
+      "Add one target-aware CI check that would catch a platform break native tests miss.",
+      "Measure one final artifact before and after a claimed size optimization."
+    ],
+    sources: [
+      "https://rustwasm.github.io/docs/wasm-pack/commands/test.html",
+      "https://rustwasm.github.io/book/reference/code-size.html",
+      "https://rustwasm.github.io/wasm-bindgen/reference/optimize-size.html",
+      "https://probe.rs/docs/tools/probe-rs/",
+      "https://defmt.ferrous-systems.com/",
+      "https://docs.rust-embedded.org/book/intro/tooling.html"
+    ],
+    related: ["wasm", "embedded-no-std", "embassy", "firmware-stack"]
+  },
+  "platform-lessons": {
+    title: "Platform Lessons and Community Heuristics",
+    summary:
+      "The recurring community lessons are mostly about not trusting the host environment: wasm targets differ, no_std testing has traps, and embedded synchronization should follow hardware reality rather than habit.",
+    rules: [
+      "Choose the wasm target and toolchain pair deliberately; not all wasm targets or hosts behave the same.",
+      "A `no_std` crate can still use `std` in tests; do not contort the crate root with `cfg_attr(not(test), no_std)` when targeted test boundaries already exist.",
+      "Do not assume a single global critical section is the only safe embedded synchronization story; hardware capability and ownership model matter.",
+      "Async syntax in Embassy does not solve unclear peripheral ownership or over-tasked designs.",
+      "Build, flash, attach, and observe workflow must live in the repo because platform friction is part of the design."
+    ],
+    useWhen: [
+      "You want anti-pattern radar before adopting a platform design.",
+      "You are reviewing code that technically works but seems platform-naive.",
+      "You need heuristics drawn from repeated community mistakes."
+    ],
+    avoidWhen: [
+      "You need a formal platform guarantee rather than a field-tested heuristic.",
+      "You are applying a forum rule without checking the actual target hardware or host environment."
+    ],
+    pitfalls: [
+      "Assuming host-native success implies platform success.",
+      "Treating `no_std` support, interrupt safety, or wasm interop as solved by labels rather than validation.",
+      "Encoding workflow only in one engineer's local commands instead of project config."
+    ],
+    practice: [
+      "Take one platform bug and label it as target mismatch, validation gap, ownership gap, or workflow gap.",
+      "Review one embedded or wasm repo and list which assumptions depend on the host instead of the target.",
+      "Turn one forum heuristic into a repo-level check, config file, or clearer boundary."
+    ],
+    sources: [
+      "https://users.rust-lang.org/t/fixing-rusts-webassembly-targets/88947",
+      "https://users.rust-lang.org/t/future-of-rust-wasm/133089",
+      "https://users.rust-lang.org/t/can-a-no-std-crate-have-std-dependencies-in-test-cases-only/72982",
+      "https://users.rust-lang.org/t/code-review-for-a-new-hal-gpio-implementation/66942",
+      "https://docs.rust-embedded.org/book/peripherals/borrowck.html"
+    ],
+    related: ["wasm", "embedded-no-std", "embassy", "firmware-stack", "tooling-debugging"]
   }
 };
 
@@ -377,7 +458,9 @@ function buildOverviewSection(depth: Depth): string {
       "Wasm: target-specific interop, tests, and size constraints.",
       "Embedded no_std: runtime absence, interrupts, linker layout, HAL/PAC boundaries.",
       "Embassy: executor, tasks, timers, channels, and async embedded ownership.",
-      "Firmware stack: bootstrap, logging, flashing, and whole-target architecture."
+      "Firmware stack: bootstrap, logging, flashing, and whole-target architecture.",
+      "Tooling: wasm tests, size tools, probe-based flashing, and target logging.",
+      "Lessons: community anti-patterns that docs usually mention only indirectly."
     ],
     depth
   );

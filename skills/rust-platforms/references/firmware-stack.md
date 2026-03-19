@@ -3,6 +3,8 @@
 ## Scope
 
 Load this file when the real problem is the whole firmware shape: board bring-up, app layering, logging or flashing workflow, Embassy integration, and ownership of hardware resources across tasks and interrupts.
+See also [tooling-and-debugging.md](tooling-and-debugging.md) for `probe-rs`, `defmt`, and reproducible debug workflow.
+See also [platform-lessons.md](platform-lessons.md) for architecture heuristics from community review experience.
 
 ## Canonical Shape
 
@@ -36,4 +38,3 @@ Load this file when the real problem is the whole firmware shape: board bring-up
 - https://docs.rust-embedded.org/book/intro/no-std.html
 - https://docs.rust-embedded.org/embedonomicon/memory-layout.html
 - https://embassy.dev/book/
-
