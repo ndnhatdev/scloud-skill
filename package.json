@@ -12,6 +12,7 @@
     "audit:rust-master": "ts-node scripts/audit-skill.ts rust-master",
     "audit:rust-ecosystem": "ts-node scripts/audit-skill.ts rust-ecosystem",
     "audit:rust-platforms": "ts-node scripts/audit-skill.ts rust-platforms",
+    "audit:rust-specializations": "ts-node scripts/audit-skill.ts rust-specializations",
     "pack": "ts-node scripts/packager.ts",
     "package:agent-skill": "python3 .agents/skills/skill-creator/scripts/package_skill.py",
     "typecheck": "tsc --noEmit",
