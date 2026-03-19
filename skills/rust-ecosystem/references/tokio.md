@@ -4,6 +4,7 @@
 
 Load this file for Tokio runtime decisions: task spawning, channels, `select!`, shared state, blocking boundaries, and graceful shutdown.
 Use `rust-master` for ownership, `Send` or `Sync`, and compiler diagnostics behind these choices.
+See also [service-stack.md](service-stack.md) for the integrated Tokio + Axum + SQLx lifecycle.
 
 ## Core Rules
 
@@ -23,6 +24,13 @@ Use `rust-master` for ownership, `Send` or `Sync`, and compiler diagnostics behi
 - Shared read/modify/write on small state with low contention: `Arc<std::sync::Mutex<T>>`
 - Cross-task shutdown coordination: `CancellationToken` plus task tracking
 
+## Integration Notes
+
+- In Axum services, keep request-scoped work in handlers and long-lived coordination in background tasks or service objects.
+- For DB work, SQLx pools are already shared handles; avoid wrapping a pool in extra mutexes.
+- If a background task owns a network or queue resource, expose it to handlers through channels instead of shared locking.
+- Be careful with `spawn_blocking`: started blocking tasks cannot be force-aborted, so runtime shutdown may wait for them unless you design bounded blocking work.
+
 ## Review Checklist
 
 - Is any blocking code or wide critical section sitting on the runtime?
@@ -30,6 +38,7 @@ Use `rust-master` for ownership, `Send` or `Sync`, and compiler diagnostics behi
 - Would a manager task and channels simplify access to the shared resource?
 - Is shutdown coordinated, or will tasks leak or be abruptly aborted?
 - Are spawned tasks owned, awaited, or tracked somewhere meaningful?
+- Is any long-lived blocking task incorrectly using `spawn_blocking` instead of a dedicated thread or service process?
 
 ## Sources
 
@@ -39,4 +48,3 @@ Use `rust-master` for ownership, `Send` or `Sync`, and compiler diagnostics behi
 - https://tokio.rs/tokio/topics/shutdown
 - https://docs.rs/tokio/latest/tokio/task/fn.spawn_blocking.html
 - https://docs.rs/tokio/latest/tokio/sync/struct.Mutex.html
-

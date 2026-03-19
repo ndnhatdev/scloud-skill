@@ -1,4 +1,4 @@
-type Topic = "overview" | "tokio" | "serde" | "axum" | "sqlx" | "tracing";
+type Topic = "overview" | "tokio" | "serde" | "axum" | "sqlx" | "service-stack" | "tracing";
 type Goal = "learn" | "choose" | "review" | "debug" | "design" | "study-plan";
 type Depth = "quick" | "standard" | "deep";
 type TopicRequest = Topic | "all";
@@ -33,7 +33,7 @@ type SkillOutput = {
   sources: string[];
 };
 
-const TOPIC_ORDER = ["overview", "tokio", "serde", "axum", "sqlx", "tracing"] as const satisfies readonly Topic[];
+const TOPIC_ORDER = ["overview", "tokio", "serde", "axum", "sqlx", "service-stack", "tracing"] as const satisfies readonly Topic[];
 
 const RESEARCH_BASELINE = [
   "Official crate documentation reviewed on 2026-03-19.",
@@ -44,10 +44,11 @@ const RESEARCH_BASELINE = [
 
 const TOPIC_KEYWORDS: Record<Topic, string[]> = {
   overview: ["rust backend", "ecosystem", "app stack", "service architecture", "web service"],
-  tokio: ["tokio", "spawn", "spawn_blocking", "select", "channel", "channels", "shutdown", "cancellation", "runtime", "mpsc", "oneshot"],
+  tokio: ["tokio", "rust-tokio", "spawn", "spawn_blocking", "select", "channel", "channels", "shutdown", "cancellation", "runtime", "mpsc", "oneshot"],
   serde: ["serde", "serialize", "deserialize", "json", "yaml", "rename_all", "flatten", "untagged", "default", "skip_serializing_if"],
-  axum: ["axum", "router", "extractor", "extractors", "state", "intoresponse", "handler", "middleware", "route", "with_state"],
-  sqlx: ["sqlx", "database", "db", "query!", "query_as!", "migration", "migrations", "pool", "transaction", ".sqlx", "database_url"],
+  axum: ["axum", "rust-axum", "router", "extractor", "extractors", "state", "intoresponse", "handler", "middleware", "route", "with_state"],
+  sqlx: ["sqlx", "rust-sqlx", "database", "db", "query!", "query_as!", "migration", "migrations", "pool", "transaction", ".sqlx", "database_url"],
+  "service-stack": ["service stack", "startup", "bootstrap", "app state", "graceful shutdown", "request flow", "integration test", "background task", "request to db", "tokio axum sqlx"],
   tracing: ["tracing", "tracing-subscriber", "envfilter", "rust_log", "instrument", "span", "spans", "event", "subscriber", "layer"]
 };
 
@@ -88,7 +89,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rs/sqlx/latest/sqlx/struct.Pool.html",
       "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html"
     ],
-    related: ["tokio", "axum", "sqlx", "tracing"]
+    related: ["tokio", "axum", "sqlx", "service-stack", "tracing"]
   },
   tokio: {
     title: "Tokio Runtime and Coordination",
@@ -129,7 +130,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rs/tokio/latest/tokio/task/fn.spawn_blocking.html",
       "https://docs.rs/tokio/latest/tokio/sync/struct.Mutex.html"
     ],
-    related: ["axum", "sqlx", "tracing"]
+    related: ["axum", "sqlx", "service-stack", "tracing"]
   },
   serde: {
     title: "Serde Payload Modeling",
@@ -167,7 +168,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://serde.rs/enum-representations.html",
       "https://serde.rs/custom-serialization.html"
     ],
-    related: ["axum", "sqlx"]
+    related: ["axum", "sqlx", "service-stack"]
   },
   axum: {
     title: "Axum HTTP Boundaries",
@@ -205,7 +206,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rs/axum/latest/axum/extract/struct.State.html",
       "https://docs.rs/axum/latest/axum/response/trait.IntoResponse.html"
     ],
-    related: ["tokio", "serde", "tracing", "sqlx"]
+    related: ["tokio", "serde", "sqlx", "service-stack", "tracing"]
   },
   sqlx: {
     title: "SQLx Database Access",
@@ -245,7 +246,47 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rs/sqlx/latest/sqlx/macro.query_as.html",
       "https://docs.rs/sqlx/latest/sqlx/migrate/index.html"
     ],
-    related: ["tokio", "axum", "serde"]
+    related: ["tokio", "axum", "serde", "service-stack"]
+  },
+  "service-stack": {
+    title: "Tokio + Axum + SQLx Service Stack",
+    summary:
+      "A production Rust service is strongest when startup, app state, shutdown, request flow, and error boundaries are explicit across Tokio, Axum, SQLx, and Tracing.",
+    rules: [
+      "Bootstrap in a fixed order: config, tracing, pool, app state, router, listener, shutdown wiring.",
+      "Keep one top-level app state with stable shared resources and derive narrower substates where modules need less.",
+      "Keep handlers thin and push transactions into service or repository boundaries that own invariants.",
+      "Coordinate shutdown across listener, background tasks, and started blocking work instead of relying on drop order.",
+      "Cover at least one end-to-end request path in tests, including schema-ready SQLx access and HTTP mapping."
+    ],
+    useWhen: [
+      "You are designing a Rust web service that combines Tokio, Axum, SQLx, and Tracing.",
+      "You are reviewing startup, app state, graceful shutdown, or request-to-database flow.",
+      "You need a practical blueprint instead of isolated crate advice."
+    ],
+    avoidWhen: [
+      "You only need a single crate question that does not cross service boundaries.",
+      "You need core language or compiler-diagnostic reasoning rather than application architecture."
+    ],
+    pitfalls: [
+      "Implicit startup order where tracing, DB, and app state are initialized ad hoc across modules.",
+      "Fat handlers that own validation, transactions, and HTTP mapping all at once.",
+      "No coordinated shutdown path for listener, background tasks, or blocking work."
+    ],
+    practice: [
+      "Draw the startup sequence for your service and name the owner of each long-lived resource.",
+      "Refactor one handler so extraction, domain service, transaction scope, and response mapping are separated.",
+      "Write one integration test that boots the app, hits a route, verifies DB effects, and tears down cleanly."
+    ],
+    sources: [
+      "https://tokio.rs/tokio/topics/shutdown",
+      "https://docs.rs/axum/latest/axum/struct.Router.html",
+      "https://docs.rs/axum/latest/axum/extract/struct.State.html",
+      "https://docs.rs/sqlx/latest/sqlx/struct.Pool.html",
+      "https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html",
+      "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html"
+    ],
+    related: ["tokio", "axum", "sqlx", "tracing"]
   },
   tracing: {
     title: "Tracing and Observability",
@@ -284,7 +325,7 @@ const TOPICS: Record<Topic, TopicCard> = {
       "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/layer/index.html",
       "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html"
     ],
-    related: ["tokio", "axum", "sqlx"]
+    related: ["tokio", "axum", "sqlx", "service-stack"]
   }
 };
 
@@ -411,6 +452,7 @@ function buildOverviewSection(depth: Depth): string {
       "Serde: wire shape, derive attributes, enum representation, compatibility.",
       "Axum: routers, extractors, state, HTTP boundary mapping.",
       "SQLx: pools, checked queries, transactions, migrations.",
+      "Service stack: startup, app state, graceful shutdown, request-to-DB flow.",
       "Tracing: spans, fields, filters, layered subscribers."
     ],
     depth
