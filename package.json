@@ -8,8 +8,12 @@
     "node": ">=18"
   },
   "scripts": {
+    "audit:skill": "ts-node scripts/audit-skill.ts",
+    "audit:rust-master": "ts-node scripts/audit-skill.ts rust-master",
     "pack": "ts-node scripts/packager.ts",
-    "typecheck": "tsc --noEmit"
+    "package:agent-skill": "python3 .agents/skills/skill-creator/scripts/package_skill.py",
+    "typecheck": "tsc --noEmit",
+    "validate:agent-skill": "python3 .agents/skills/skill-creator/scripts/quick_validate.py"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
