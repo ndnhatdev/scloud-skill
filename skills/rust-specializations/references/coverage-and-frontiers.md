@@ -13,11 +13,10 @@ Use the domain-specific reference files for concrete technical questions once th
 - `rust-platforms`: wasm, embedded `no_std`, Embassy, firmware architecture, and platform tooling
 - `rust-specializations`: rustc internals, fuzzing and sanitizers, Rust for Linux, and SIMD or intrinsics
 - `rust-verification`: `proptest`, `loom`, Kani, and layered verification strategy
+- `rust-delivery`: cross-compilation, target tooling, binary compatibility, packaging, and release automation
 
 ## Remaining High-Value Frontiers
 
-- Distribution and cross-compilation:
-  - `cross`, `cargo-zigbuild`, `cargo-dist`, musl or static-linking choices, CI matrix design, and release artifacts
 - Desktop and GUI applications:
   - `tauri` for desktop apps with a Rust core and web UI
   - `egui` or `iced` when immediate-mode or native-style GUI architecture becomes the dominant concern
@@ -38,15 +37,14 @@ Use the domain-specific reference files for concrete technical questions once th
 ## Senior Heuristics
 
 - Do not create a new skill just because a crate is popular; create it when the crate pulls in a different engineering discipline.
-- Distribution deserves its own lane because cross-compiling and shipping binaries is an operational system, not only a Cargo command.
 - GUI and graphics deserve separate skills only if the project genuinely lives there; otherwise they stay as future candidates.
 - Keep `rust-master` focused on language and design rules; let domain skills own their toolchains and operational workflows.
 
 ## Suggested Next Splits
 
-1. `rust-delivery` for cross-compilation, packaging, release automation, and target-distribution tradeoffs.
-2. `rust-gui` or `rust-graphics` only if the product direction actually depends on desktop UI or rendering and GPU work.
-3. data-system skills only if the repo actually moves toward Arrow, DataFusion, or Polars style workloads.
+1. `rust-gui` or `rust-graphics` only if the product direction actually depends on desktop UI or rendering and GPU work.
+2. data-system skills only if the repo actually moves toward Arrow, DataFusion, or Polars style workloads.
+3. only split further when the domain changes architecture, testing, and operational ownership enough to deserve its own lane.
 
 ## Sources
 
@@ -54,4 +52,3 @@ Use the domain-specific reference files for concrete technical questions once th
 - https://docs.rs/egui/latest/egui/
 - https://bevyengine.org/learn/quick-start/introduction/
 - https://sotrh.github.io/learn-wgpu/
-- https://opensource.axo.dev/cargo-dist/
