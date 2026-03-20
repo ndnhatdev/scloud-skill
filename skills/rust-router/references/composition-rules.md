@@ -13,6 +13,8 @@ The goal is to combine the fewest skills that actually add distinct value.
   - Use when wasm or embedded questions also depend on unsafe, lifetimes, or low-level review concerns.
 - `rust-verification` then `rust-master`
   - Use when property tests, loom models, or Kani harnesses depend on core Rust invariants or unsafe reasoning.
+- `rust-verification` then `rust-ecosystem`
+  - Use when verification work is happening inside a Tokio, Serde, Axum, SQLx, or Tracing code path and crate-specific behavior still matters.
 - `rust-ecosystem` then `rust-delivery`
   - Use when the question spans backend service code and how that service should be packaged or released.
 - `rust-platforms` then `rust-delivery`
@@ -38,6 +40,8 @@ The goal is to combine the fewest skills that actually add distinct value.
   - `rust-platforms`
 - "Use loom or Kani for a lock-free queue":
   - `rust-verification` then `rust-master`
+- "Add proptest around Serde round-trips for an API payload":
+  - `rust-verification` then `rust-ecosystem`
 - "Review a parser hardened with cargo-fuzz and proptest":
   - `rust-specializations` then `rust-verification`
 - "Kernel-driver code using unsafe pointer manipulation":
@@ -49,4 +53,3 @@ The goal is to combine the fewest skills that actually add distinct value.
 - Pulling in three or four Rust skills for a request that only needs one.
 - Confusing "advanced" with `rust-specializations`; many advanced questions still belong to ecosystem, platforms, delivery, or verification.
 - Treating packaging and verification as support details when they are actually the main workflow boundary.
-

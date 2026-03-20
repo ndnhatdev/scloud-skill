@@ -23,11 +23,18 @@ type RustSkillCard = {
   chooseWhen: string[];
   avoidWhen: string[];
   keywords: string[];
+  anchors: string[];
+};
+
+type RankedSkill = {
+  skill: RustSkill;
+  score: number;
+  anchorHits: number;
 };
 
 type SkillOutput = {
   skill: "rust-router";
-  checked_on: "2026-03-19";
+  checked_on: "2026-03-20";
   topic: Topic;
   goal: Goal;
   depth: Depth;
@@ -48,6 +55,15 @@ const SKILL_ORDER = [
 
 const TOPIC_ORDER = ["overview", "route-request", "combine-skills"] as const satisfies readonly Topic[];
 
+const ROUTING_PRIORITY: Record<RustSkill, number> = {
+  "rust-master": 0,
+  "rust-ecosystem": 2,
+  "rust-platforms": 3,
+  "rust-specializations": 5,
+  "rust-verification": 4,
+  "rust-delivery": 3
+};
+
 const SKILLS: Record<RustSkill, RustSkillCard> = {
   "rust-master": {
     summary: "Core Rust language, diagnostics, unsafe, performance, macros, and general code review.",
@@ -59,6 +75,7 @@ const SKILLS: Record<RustSkill, RustSkillCard> = {
     avoidWhen: [
       "A concrete crate stack, platform target, verification tool, or delivery workflow clearly defines the boundary."
     ],
+    anchors: [],
     keywords: [
       "ownership",
       "borrowing",
@@ -86,6 +103,7 @@ const SKILLS: Record<RustSkill, RustSkillCard> = {
       "The problem is an async service architecture or request-to-DB flow."
     ],
     avoidWhen: ["The hard boundary is wasm, embedded, verification, compiler internals, or release distribution."],
+    anchors: ["tokio", "axum", "sqlx", "serde", "tracing", "tower", "hyper"],
     keywords: [
       "tokio",
       "axum",
@@ -108,6 +126,7 @@ const SKILLS: Record<RustSkill, RustSkillCard> = {
       "The runtime environment or target platform is the main constraint."
     ],
     avoidWhen: ["The main problem is binary distribution or host release workflow."],
+    anchors: ["wasm", "wasm32", "wasm-bindgen", "wasm-pack", "no_std", "embedded", "firmware", "embassy", "probe-rs", "defmt"],
     keywords: [
       "wasm",
       "wasm32",
@@ -130,12 +149,16 @@ const SKILLS: Record<RustSkill, RustSkillCard> = {
       "The request is about rustc internals, cargo-fuzz, Rust for Linux, or low-level SIMD.",
       "The problem sits outside ordinary app, library, platform, verification, or delivery work."
     ],
-    avoidWhen: ["The core issue is ordinary async services, wasm, delivery, or proptest/loom/Kani."],
+    avoidWhen: ["The core issue is ordinary async services, wasm, delivery, or proptest or loom or Kani."],
+    anchors: ["rustc", "mir", "cargo-fuzz", "cargo fuzz", "rust for linux", "kernel", "simd", "std::arch", "compiler internals"],
     keywords: [
       "rustc",
       "mir",
       "hir",
+      "borrowck",
       "query system",
+      "compiler internals",
+      "cargo-fuzz",
       "cargo fuzz",
       "fuzzing",
       "rust for linux",
@@ -153,6 +176,7 @@ const SKILLS: Record<RustSkill, RustSkillCard> = {
       "The core problem is proving or systematically searching correctness."
     ],
     avoidWhen: ["The main workflow is fuzzing-only or release-only with no verification boundary."],
+    anchors: ["proptest", "loom", "kani", "proof harness", "model checking", "property test", "property-based"],
     keywords: [
       "proptest",
       "loom",
@@ -172,6 +196,7 @@ const SKILLS: Record<RustSkill, RustSkillCard> = {
       "The main problem is shipping binaries or installers across targets."
     ],
     avoidWhen: ["The main boundary is runtime platform behavior rather than shipping host artifacts."],
+    anchors: ["cross", "cargo-zigbuild", "cargo-xwin", "cargo xwin", "dist", "cargo-dist", "musl", "glibc", "msvc"],
     keywords: [
       "cross",
       "cargo-zigbuild",
@@ -184,6 +209,13 @@ const SKILLS: Record<RustSkill, RustSkillCard> = {
       "msvc",
       "cross compilation",
       "release pipeline",
+      "package",
+      "packaging",
+      "artifact",
+      "artifacts",
+      "ship",
+      "shipping",
+      "release artifact",
       "installer",
       "github release"
     ]
@@ -191,9 +223,10 @@ const SKILLS: Record<RustSkill, RustSkillCard> = {
 };
 
 const RESEARCH_BASELINE = [
-  "Local skill boundaries reviewed on 2026-03-19.",
+  "Local skill boundaries reviewed on 2026-03-20.",
   "Routing is intentionally biased toward one primary skill and at most one supporting skill.",
-  "rust-master is treated as the default support skill for language-level concerns inside another domain."
+  "rust-master is treated as the default support skill for language-level concerns inside another domain.",
+  "Domain anchors now take precedence over generic core-Rust vocabulary when both appear in the same request."
 ] as const;
 
 function normalize(value: string | undefined): string {
@@ -263,28 +296,64 @@ function keywordMatches(haystack: string, keyword: string): boolean {
   return pattern.test(haystack);
 }
 
-function rankSkills(text: string): RustSkill[] {
+function scoreSkills(text: string): RankedSkill[] {
   const haystack = normalize(text);
   if (!haystack) {
     return [];
   }
 
-  const scores = new Map<RustSkill, number>();
+  const scores: RankedSkill[] = [];
+  let nonMasterAnchorDetected = false;
+
   for (const skill of SKILL_ORDER) {
     let score = 0;
+    let anchorHits = 0;
+
+    for (const anchor of SKILLS[skill].anchors) {
+      if (keywordMatches(haystack, anchor)) {
+        anchorHits += 1;
+        score += 3;
+      }
+    }
+
     for (const keyword of SKILLS[skill].keywords) {
       if (keywordMatches(haystack, keyword)) {
         score += keyword.includes(" ") ? 2 : 1;
       }
     }
-    if (score > 0) {
-      scores.set(skill, score);
+
+    if (skill !== "rust-master" && anchorHits > 0) {
+      nonMasterAnchorDetected = true;
+    }
+
+    if (score > 0 || anchorHits > 0) {
+      scores.push({ skill, score, anchorHits });
     }
   }
 
-  return [...scores.entries()]
-    .sort((left, right) => right[1] - left[1])
-    .map(([skill]) => skill);
+  if (nonMasterAnchorDetected) {
+    const master = scores.find((entry) => entry.skill === "rust-master");
+    if (master && master.score <= 4) {
+      master.score = Math.max(0, master.score - 2);
+    }
+  }
+
+  return scores.sort((left, right) => {
+    if (right.score !== left.score) {
+      return right.score - left.score;
+    }
+    if (right.anchorHits !== left.anchorHits) {
+      return right.anchorHits - left.anchorHits;
+    }
+    if (ROUTING_PRIORITY[right.skill] !== ROUTING_PRIORITY[left.skill]) {
+      return ROUTING_PRIORITY[right.skill] - ROUTING_PRIORITY[left.skill];
+    }
+    return left.skill.localeCompare(right.skill);
+  });
+}
+
+function rankSkills(text: string): RustSkill[] {
+  return scoreSkills(text).map((entry) => entry.skill);
 }
 
 function mentionsCoreRust(text: string): boolean {
@@ -306,7 +375,7 @@ function mentionsCoreRust(text: string): boolean {
   return coreKeywords.some((keyword) => keywordMatches(text, keyword));
 }
 
-function chooseSupportingSkills(primary: RustSkill, ranked: RustSkill[], goal: Goal, text: string): RustSkill[] {
+function chooseSupportingSkills(primary: RustSkill, ranked: RustSkill[], text: string): RustSkill[] {
   const supports: RustSkill[] = [];
   const haystack = normalize(text);
 
@@ -343,18 +412,20 @@ function chooseSupportingSkills(primary: RustSkill, ranked: RustSkill[], goal: G
       supports.push(candidate);
       break;
     }
+    if (primary === "rust-verification" && candidate === "rust-ecosystem") {
+      supports.push(candidate);
+      break;
+    }
+    if (primary === "rust-ecosystem" && candidate === "rust-verification") {
+      supports.push(candidate);
+      break;
+    }
   }
 
   return [...new Set(supports)].slice(0, 2);
 }
 
-function resolvePrimarySkill(input: SkillInput): RustSkill {
-  const combined = [input.topic, input.question, input.constraints].filter(Boolean).join(" ");
-  const ranked = rankSkills(combined);
-  return ranked[0] ?? "rust-master";
-}
-
-function resolveTopic(input: SkillInput, primary: RustSkill, supports: RustSkill[]): Topic {
+function resolveTopic(input: SkillInput, supports: RustSkill[]): Topic {
   const normalizedTopic = normalize(input.topic);
   if (normalizedTopic === "all") {
     return "combine-skills";
@@ -362,7 +433,16 @@ function resolveTopic(input: SkillInput, primary: RustSkill, supports: RustSkill
   if (isTopic(normalizedTopic)) {
     return normalizedTopic;
   }
-  return supports.length > 0 || primary === "rust-master" ? "route-request" : "route-request";
+
+  const combined = normalize([input.question, input.constraints].filter(Boolean).join(" "));
+  const asksCombination = ["which skill", "which skills", "multiple skills", "combine", "kết hợp", "skill nào"].some((marker) =>
+    combined.includes(marker)
+  );
+
+  if (supports.length > 0 || asksCombination) {
+    return "combine-skills";
+  }
+  return "route-request";
 }
 
 function bulletSection(title: string, items: readonly string[]): string {
@@ -397,12 +477,52 @@ function buildOverviewSection(depth: Depth): string {
     .join("\n");
 }
 
-function buildRouteSection(primary: RustSkill, supports: RustSkill[], depth: Depth): string {
+function supportReason(primary: RustSkill, support: RustSkill): string {
+  if (support === "rust-master") {
+    return "Core language or review concerns still matter inside the primary domain.";
+  }
+  if (primary === "rust-ecosystem" && support === "rust-delivery") {
+    return "The request spans service implementation and binary distribution workflow.";
+  }
+  if (primary === "rust-delivery" && support === "rust-ecosystem") {
+    return "The release workflow is for a backend service stack, not a generic binary.";
+  }
+  if (primary === "rust-platforms" && support === "rust-delivery") {
+    return "The request crosses a platform-specific runtime and a host-side shipping workflow.";
+  }
+  if (primary === "rust-delivery" && support === "rust-platforms") {
+    return "The shipping plan depends on platform-specific runtime constraints.";
+  }
+  if (primary === "rust-specializations" && support === "rust-verification") {
+    return "Specialized reliability work overlaps systematic verification concerns.";
+  }
+  if (primary === "rust-verification" && support === "rust-specializations") {
+    return "The proof or test strategy overlaps a specialized subsystem such as fuzzing.";
+  }
+  if (primary === "rust-verification" && support === "rust-ecosystem") {
+    return "Verification is happening inside a crate ecosystem boundary that still matters.";
+  }
+  if (primary === "rust-ecosystem" && support === "rust-verification") {
+    return "The app-stack problem also depends on verification-tool choice.";
+  }
+  return "The request crosses a second meaningful skill boundary.";
+}
+
+function buildAlternativesSection(ranked: RustSkill[], primary: RustSkill, supports: RustSkill[], depth: Depth): string {
+  const alternatives = ranked.filter((skill) => skill !== primary && !supports.includes(skill)).slice(0, itemLimit(depth));
+  if (alternatives.length === 0) {
+    return "";
+  }
+
+  return bulletSection(
+    "Alternatives Considered",
+    alternatives.map((skill) => `${skill}: ${SKILLS[skill].summary}`)
+  );
+}
+
+function buildRouteSection(primary: RustSkill, supports: RustSkill[], ranked: RustSkill[], depth: Depth): string {
   const primaryCard = SKILLS[primary];
-  const lines = [
-    `Primary skill: ${primary}`,
-    `Why: ${primaryCard.summary}`
-  ];
+  const lines = [`Primary skill: ${primary}`, `Why: ${primaryCard.summary}`];
 
   if (supports.length > 0) {
     lines.push(`Supporting skills: ${supports.join(", ")}`);
@@ -416,7 +536,14 @@ function buildRouteSection(primary: RustSkill, supports: RustSkill[], depth: Dep
     ...lines.map((line) => `- ${line}`),
     "",
     bulletSection("Choose This Primary Skill When", takeItems(primaryCard.chooseWhen, depth)),
-    bulletSection("Do Not Expand Further When", takeItems(primaryCard.avoidWhen, depth))
+    bulletSection("Do Not Expand Further When", takeItems(primaryCard.avoidWhen, depth)),
+    supports.length > 0
+      ? bulletSection(
+          "Why These Supporting Skills",
+          supports.map((support) => `${support}: ${supportReason(primary, support)}`)
+        )
+      : "",
+    buildAlternativesSection(ranked, primary, supports, depth)
   ]
     .filter(Boolean)
     .join("\n");
@@ -452,8 +579,8 @@ function buildContextSection(input: SkillInput): string {
   return notes.length === 0 ? "" : [`## Caller Context`, "", ...notes.map((item) => `- ${item}`), ""].join("\n");
 }
 
-function buildReport(input: SkillInput, topic: Topic, primary: RustSkill, supports: RustSkill[], depth: Depth): string {
-  const sections: string[] = [buildOverviewSection(depth), buildRouteSection(primary, supports, depth)];
+function buildReport(input: SkillInput, topic: Topic, primary: RustSkill, supports: RustSkill[], ranked: RustSkill[], depth: Depth): string {
+  const sections: string[] = [buildOverviewSection(depth), buildRouteSection(primary, supports, ranked, depth)];
 
   if (topic === "combine-skills" || supports.length > 0) {
     sections.push(buildCompositionSection(primary, supports, depth));
@@ -473,18 +600,18 @@ export async function run(input: SkillInput = {}): Promise<SkillOutput> {
   const combined = [input.topic, input.question, input.constraints].filter(Boolean).join(" ");
   const ranked = rankSkills(combined);
   const primary_skill = ranked[0] ?? "rust-master";
-  const supporting_skills = chooseSupportingSkills(primary_skill, ranked, goal, combined);
-  const topic = resolveTopic(input, primary_skill, supporting_skills);
+  const supporting_skills = chooseSupportingSkills(primary_skill, ranked, combined);
+  const topic = resolveTopic(input, supporting_skills);
 
   return {
     skill: "rust-router",
-    checked_on: "2026-03-19",
+    checked_on: "2026-03-20",
     topic,
     goal,
     depth,
     primary_skill,
     supporting_skills,
-    report: buildReport(input, topic, primary_skill, supporting_skills, depth),
+    report: buildReport(input, topic, primary_skill, supporting_skills, ranked, depth),
     sources: [
       "skills/rust-master/SKILL.md",
       "skills/rust-ecosystem/SKILL.md",
